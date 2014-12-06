@@ -11,10 +11,10 @@
     <title>Rohit Mukherjee's Portfolio</title>
     
     <!-- Bootstrap core CSS -->
-    <link href="assets/css/bootstrap.css" rel="stylesheet">
+    <link href="/assets/css/bootstrap.css" rel="stylesheet">
     <!-- Custom styles for this template -->
-    <link href="assets/css/style.css" rel="stylesheet">
-    <link href="assets/css/font-awesome.min.css" rel="stylesheet">
+    <link href="/assets/css/style.css" rel="stylesheet">
+    <link href="/assets/css/font-awesome.min.css" rel="stylesheet">
   </head>
   <body>
 
@@ -28,22 +28,14 @@
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
           </button>
-          <a class="navbar-brand" href="index.html"> PORTFOLIO</a>
+          <a class="navbar-brand" href=" {{ site.url }} "> PORTFOLIO</a>
         </div>
         <div class="navbar-collapse collapse">
           <ul class="nav navbar-nav navbar-right">
-            <li class="active"><a href="index.html">Home</a></li>
-            <li><a href="about.html">About</a></li>
-            <li><a href="resume.html">Resume</a></li>
+            <li class="active"><a href= " {{ site.url }} ">Home</a></li>
+            <li><a href="{{ site.url }}/about">About</a></li>
+            <li><a href="{{ site.url }}/resume">Resume</a></li>
           </ul>
         </div><!--/.nav-collapse -->
       </div>
     </div>
-
-    <!-- Bootstrap core JavaScript
-    ================================================== -->
-    <!-- Placed at the end of the document so the pages load faster -->
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
-    <script src="assets/js/bootstrap.min.js"></script>
-  </body>
-</html>
