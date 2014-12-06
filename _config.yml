@@ -2,8 +2,7 @@ name: "rohitmukherjee.com"
 description: "Rohit Mukherjee's Website"
 
 url: "http://rohitmukherjee.com"
-
-`paginate: 10
+paginate: 10
 
 markdown: rdiscount
 permalink: pretty
