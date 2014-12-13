@@ -2,9 +2,23 @@
 title: Blog
 layout: default
 ---
-	
-<div class="container">
-	{% for post in site.posts limit: 10 %}
 
-	{% endfor %}
-</div><! --/container -->
+<section id="blog"></section>
+<div class="container">
+	<h3>Posts</h3>
+	<div class="row-fluid">
+  		<div class="span12">
+  			<ul>
+			    {% for post in site.posts limit: 10 %}
+				    <li>
+					    <h3>{{ post.title }}</h3>
+					    <h4>{{ post.date | date_to_long_string }}</h4>
+					    <p>
+					      <a href="{{ post.url }}">Read Post</a>
+					    </p>
+				    </li>
+			    {% endfor %}
+			 </ul>
+  		</div>
+	</div>
+</div>
