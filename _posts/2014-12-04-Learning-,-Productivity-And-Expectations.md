@@ -1,4 +1,7 @@
-## Learning, Productivity and Expectations
+---
+title: Learning, Productivity and Expectations
+layout: post
+---
 
 I've written several blog posts about managing time, health, general well being and happiness. This post deals more with growth strategies and how to prevent the mind itself from leading you down dark corridors.
 
