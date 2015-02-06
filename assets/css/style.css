@@ -214,9 +214,6 @@ h1, h2, h3, h4, h5, h6 {
     background-size: cover;
 }
 
-
-
-
 /* Gallery */
 .gallery {
 	margin-top: 30px;
@@ -225,3 +222,6 @@ h1, h2, h3, h4, h5, h6 {
 .gallery img:hover {
 	opacity: 0.4;
 }
+
+.margin_5px {
+    margin: 5px;
