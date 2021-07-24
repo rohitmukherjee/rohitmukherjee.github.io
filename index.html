@@ -2,41 +2,18 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>CS416 Final Project</title>
-    <link rel="stylesheet" type="text/css"
-          href="https://cdnjs.cloudflare.com/ajax/libs/fullPage.js/2.9.7/jquery.fullpage.css">
-    <link rel="stylesheet" type="text/css"
-          href="https://cdnjs.cloudflare.com/ajax/libs/fullPage.js/2.9.7/jquery.fullpage.min.css">
-
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="scripts/chart1.js"></script>
+    <style> circle {
+        fill: lightblue;
+        stroke: black;
+    } </style>
 </head>
-<body>
-
+<body onload='init()'>
 <div id="fullpage">
-    <div class="slide">Some section</div>
-    <div class="slide">Some section</div>
-    <div class="slide">Some section</div>
-    <div class="slide">Some section</div>
+    <h2>Graph 1</h2>
+    <svg width="300" height="300"></svg>
 </div>
-<!-- <script src="scripts/scrolloverflow.min.js"></script>
-<script src="scripts/fullpage.min.js"></script>
-<script src="scripts/d3.v4.min.js"></script>
-<script>
-  var charts = {};
-</script> -->
-<!-- <script src="scripts/chart1.js"></script>
-<script src="scripts/chart2.js"></script>
-<script src="scripts/chart3.js"></script>
-<script src="scripts/chart4.js"></script>
-<script src="scripts/main.js"></script> -->
-<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
-<script src="https://cdnjs.com/libraries/fullPage.js"></script>
-<!--<script src="vendors/jquery.easings.min.js"></script>-->
-<script type="text/javascript">
-    $(document).ready(function () {
-        $('#fullpage').fullpage();
-    });
-</script>
 </body>
-
 </html>
