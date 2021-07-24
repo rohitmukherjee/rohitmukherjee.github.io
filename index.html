@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <title>CS416 Final Project</title>
     <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
     <script src="scripts/chart1.js"></script>
     <style> circle {
         fill: lightblue;
@@ -11,9 +12,17 @@
     } </style>
 </head>
 <body onload='init()'>
-<div id="fullpage">
+<div id="slide-1">
     <h2>Graph 1</h2>
-    <svg width="300" height="300"></svg>
+    <div>
+        Workers in richer countries tend to work fewer hours than workers in poorer countries.
+        This is because in richer countries workers are able to produce more with each hour of work, which translates
+        into higher incomes and the ability to work less. The large differences in working hours across countries have
+        important implications for the way we think about the economic progress made in the last two centuries and the
+        nature of inequality between countries today.
+    </div>
+    <div id="chart-1">
+    </div>
 </div>
 </body>
 </html>
