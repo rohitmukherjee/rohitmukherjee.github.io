@@ -1,4 +1,4 @@
-Entity,Code,Year,Average annual hours worked by persons engaged (avh) (PWT 9.1 (2019)),Productivity (PWT 9.1 (2019)),"Total population (Gapminder, HYDE & UN)",Continent
+entity,code,year,average_annual_hours_worked,productivity,total_population,continent
 Abkhazia,OWID_ABK,2015,,,,Asia
 Afghanistan,AFG,1800,,,3280000,
 Afghanistan,AFG,1801,,,3280000,
