@@ -2,14 +2,14 @@ async function renderFirstChart() {
     const margin = {top: 10, right: 20, bottom: 30, left: 50},
         width = 800 - margin.left - margin.right,
         height = 600 - margin.top - margin.bottom;
-    const data = await d3.csv("https://rohitmukherjee.github.io/data/1-annual-working-hours-vs-gdp-per-capita-pwt.csv");
+    const data = await d3.csv("https://rohitmukherjee.github.io/data/3-productivity-vs-annual-hours-worked.csv");
     const year = 2015
     const filteredData = data.filter(function (d) {
-        return d.year == year && d.total_population != "" && d.average_annual_hours_worked != "" && d.gdp_per_capita != "";
+        return d.year == year && d.total_population != "" && d.average_annual_hours_worked != "" && d.productivity != "";
     });
 
     console.log(filteredData);
-    let svg = d3.select("#chart-1").append("svg")
+    let svg = d3.select("#chart-2").append("svg")
         .attr("width", width + margin.left + margin.right)
         .attr("height", height + margin.top + margin.bottom)
         .append("g")
@@ -18,7 +18,7 @@ async function renderFirstChart() {
 
     // Add X axis
     const x = d3.scaleLinear()
-        .domain([1000, 70000])
+        .domain([0, 100])
         .range([0, width]);
     svg.append("g")
         .attr("transform", "translate(0," + height + ")")
@@ -42,7 +42,7 @@ async function renderFirstChart() {
         .range(d3.schemeSet2);
 
     // -1- Create a tooltip div that is hidden by default:
-    const tooltip = d3.select("#slide-1")
+    var tooltip = d3.select("#chart-2")
         .append("div")
         .style("opacity", 0)
         .attr("class", "tooltip")
@@ -59,7 +59,7 @@ async function renderFirstChart() {
         .append("circle")
         .attr("class", "bubbles")
         .attr("cx", function (d) {
-            return x(Number(d.gdp_per_capita));
+            return x(Number(d.productivity));
         })
         .attr("cy", function (d) {
             return y(Number(d.average_annual_hours_worked));
@@ -67,6 +67,10 @@ async function renderFirstChart() {
         .attr("r", function (d) {
             return z(Number(d.total_population));
         })
+        .style("fill", function (d) {
+            return myColor(d.continent);
+        })
+        // -3- Trigger the functions
         .on("mouseover", function (event, d) {
             tooltip.transition()
                 .duration(200)
@@ -83,8 +87,9 @@ async function renderFirstChart() {
         .style("fill", function (d) {
             return myColor(d.continent);
         });
+
 }
 
 function tooltipHTML(object) {
-    return "<div>Country: " + object.entity + "</div><div>Population: " + object.total_population + "</div><div>GDP per capita: $" + object.gdp_per_capita + "</div>";
+    return "<div>Country: " + object.entity + "</div><div>Population: " + object.total_population + "</div><div>Productivity: $" + object.productivity + "\/hour</div>";
 }

@@ -3,15 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <title>CS416 Final Project</title>
+    <link rel="stylesheet" href="styles/app.css">
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
     <script src="scripts/chart1.js"></script>
-    <style> circle {
-        fill: lightblue;
-        stroke: black;
-    } </style>
 </head>
-<body onload='init()'>
+<body onload='renderFirstChart()'>
 <div id="slide-1">
     <h2>Annual working hours vs. GDP per capita</h2>
     <div>
@@ -42,6 +39,10 @@
     </pre>
     <div id="chart-1">
     </div>
+
 </div>
+<button onclick="location.href='scene2.html'" type="button">
+    Next
+</button>
 </body>
 </html>
