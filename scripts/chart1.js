@@ -38,7 +38,7 @@ async function init() {
 
     // Add a scale for bubble color
     const myColor = d3.scaleOrdinal()
-        .domain(["Asia", "Europe", "Americas", "Africa", "Oceania"])
+        .domain(["Asia", "Europe", "North America", "South America", "Africa", "Oceania"])
         .range(d3.schemeSet2);
 
     // -1- Create a tooltip div that is hidden by default:
@@ -58,7 +58,7 @@ async function init() {
             .duration(200)
         tooltip
             .style("opacity", 1)
-            .html("Country: " + i.entity)
+            .html(tooltipHTML(i))
             .style("left", (d3.pointer(this)[0] + 30) + "px")
             .style("top", (d3.pointer(this)[1] + 30) + "px")
     }
@@ -97,4 +97,8 @@ async function init() {
         .on("mousemove", moveTooltip)
         .on("mouseleave", hideTooltip)
 
+}
+
+function tooltipHTML(object) {
+    return "<div>Country: " + object.entity + "</div><div>Population: " + object.total_population + "</div><div>GDP per capita: $" + object.gdp_per_capita + "</div>";
 }
