@@ -65,10 +65,7 @@ async function renderFirstChart() {
         .call(d3.axisLeft(y));
 
     // Add a scale for bubble size
-    const z = d3.scaleLog()
-        .domain([200000, 1310000000])
-        .range([1, 30]);
-
+    const z = getBubbleSizeScale()
 
     // Add a scale for bubble color
     const myColor = d3.scaleOrdinal()
@@ -125,6 +122,14 @@ function firstChartTooltipHTML(object) {
     return "<div>Country: " + object.entity + "</div><div>Population: " + object.total_population + "</div><div>GDP per capita: $" + object.gdp_per_capita + "</div>";
 }
 
+function getBubbleSizeScale() {
+    // Add a scale for bubble size
+    const z = d3.scaleLog()
+        .domain([200000, 1310000000])
+        .range([1, 30]);
+    return z;
+}
+
 async function renderSecondChart() {
     const margin = {top: 10, right: 20, bottom: 30, left: 50},
         width = 800 - margin.left - margin.right,
@@ -156,11 +161,7 @@ async function renderSecondChart() {
         .range([height, 0]);
     svg.append("g")
         .call(d3.axisLeft(y));
-
-    // Add a scale for bubble size
-    const z = d3.scaleLog()
-        .domain([200000, 1310000000])
-        .range([1, 30]);
+    const z = getBubbleSizeScale();
 
     // Add a scale for bubble color
     const myColor = d3.scaleOrdinal()
