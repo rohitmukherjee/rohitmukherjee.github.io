@@ -22,14 +22,14 @@ async function renderFirstChart() {
         .range([0, width]);
     svg.append("g")
         .attr("transform", "translate(0," + height + ")")
-        .call(d3.axisBottom(x));
+        .call(d3.axisBottom(x).tickFormat(d => d + " $/yr"));
 
     // Add Y axis
     const y = d3.scaleLinear()
         .domain([1200, 2800])
         .range([height, 0]);
     svg.append("g")
-        .call(d3.axisLeft(y));
+        .call(d3.axisLeft(y).tickFormat(d => d + " hr"));
 
     // Add a scale for bubble size
     const z = getBubbleSizeScale()
@@ -113,14 +113,14 @@ async function renderSecondChart() {
         .range([0, width]);
     svg.append("g")
         .attr("transform", "translate(0," + height + ")")
-        .call(d3.axisBottom(x));
+        .call(d3.axisBottom(x).tickFormat(d => d + " $/hr"));
 
     // Add Y axis
     const y = d3.scaleLinear()
         .domain([1200, 2800])
         .range([height, 0]);
     svg.append("g")
-        .call(d3.axisLeft(y));
+        .call(d3.axisLeft(y).tickFormat(d => d + " hr"));
     const z = getBubbleSizeScale();
 
     // Add a scale for bubble color
@@ -226,13 +226,13 @@ async function renderThirdChart() {
         .range([0, width]);
     svg.append("g")
         .attr("transform", "translate(0," + height + ")")
-        .call(d3.axisBottom(x));
+        .call(d3.axisBottom(x).tickFormat(d3.format("d")));
     // Add Y axis
     const y = d3.scaleLinear()
         .domain([0, 100])
         .range([height, 0]);
     svg.append("g")
-        .call(d3.axisLeft(y));
+        .call(d3.axisLeft(y).tickFormat(d => d + " $/hr"));
 
     // Initialize line with group a
     const line = svg
