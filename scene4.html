@@ -8,7 +8,7 @@
     <script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
     <script src="scripts/app.js"></script>
 </head>
-<body onload=''>
+<body onload='renderFourthChart()'>
 <div id="slide-4">
     <h2>What we learn from this</h2>
     <div>
@@ -27,8 +27,8 @@
         That people in poorer countries work so much more than in richer countries shows that differences in prosperity
         are not due to differences in work ethic — they are largely due to differences in circumstance and opportunity.
     </div>
-    <div id="chart-4">
-    </div>
+    <svg id="chart-4" width="1000" height="600">
+    </svg>
 </div>
 <button onclick="location.href='scene3.html'" type="button">
     Previous
