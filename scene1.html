@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>CS416 Final Project</title>
+    <link rel="stylesheet" href="styles/app.css">
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
+    <script src="scripts/app.js"></script>
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"
+          integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <!-- Optional theme -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css"
+          integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+    <!-- Latest compiled and minified JavaScript -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"
+            integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa"
+            crossorigin="anonymous"></script>
+</head>
+<body onload='renderFirstChart()'>
+<div class="container">
+    <div id="slide-1">
+        <h2>Annual working hours vs. GDP per capita</h2>
+        <div>
+            Workers in richer countries tend to work fewer hours than workers in poorer countries.
+            This is because in richer countries workers are able to produce more with each hour of work, which
+            translates
+            into higher incomes and the ability to work less. The large differences in working hours across countries
+            have
+            important implications for the way we think about the economic progress made in the last two centuries and
+            the
+            nature of inequality between countries today.
+        </div>
+        <pre>
+        Economic prosperity in different places across our world today is vastly unequal. People in Switzerland, one of
+        the richest countries in the world, have an average income that is more than 20-times higher than that of people
+        in Cambodia.1 Life in these two countries can look starkly different.2
+
+        When considering such differences in prosperity, a natural question is: who works more, people in richer
+        countries like Switzerland or in poorer ones like Cambodia?
+
+        Looking at the available data, the answer is clear: workers in poorer countries actually tend to work more, and
+        sometimes much more.
+
+        We see that in the chart here, with GDP per capita on the horizontal axis and annual working hours per worker on
+        the vertical axis.
+
+        Countries like Cambodia (which is the country in the very top-left corner) or Myanmar have some of the lowest
+        GDP per capita but highest working hours. In Cambodia the average worker puts in 2,456 hours each year, nearly
+        900 more hours than in Switzerland (1,590 hours) at the bottom-right of the chart. The extra 900 hours for
+        Cambodian workers means longer work days and many fewer days off.
+    </pre>
+        <div id="chart-1">
+        </div>
+
+    </div>
+    <button onclick="location.href='scene2.html'" type="button">
+        Next
+    </button>
+</div>
+</body>
+</html>

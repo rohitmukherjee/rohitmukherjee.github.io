@@ -7,32 +7,50 @@
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
     <script src="scripts/app.js"></script>
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"
+          integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <!-- Optional theme -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css"
+          integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+    <!-- Latest compiled and minified JavaScript -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"
+            integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa"
+            crossorigin="anonymous"></script>
 </head>
 <body onload='renderFourthChart()'>
-<div id="slide-4">
-    <h2>What we learn from this</h2>
-    <div>
-        The data show that it is workers in poorer countries who tend to work more, and sometimes a lot more, than those
-        in richer countries.
+<div class="container">
+    <div id="slide-4">
+        <h2>What we learn from this</h2>
+        <div>
+            The data show that it is workers in poorer countries who tend to work more, and sometimes a lot more, than
+            those
+            in richer countries.
 
-        This has large implications for the way we think about the economic progress made in the last two centuries and
-        the nature of inequality between countries today.
+            This has large implications for the way we think about the economic progress made in the last two centuries
+            and
+            the nature of inequality between countries today.
 
-        It means that residents of today’s poorer countries like Cambodia and Myanmar — and also of today’s richer
-        countries in the past when they were poor — are not just consumption poor, often unable to afford necessities
-        like food and medicine. It means they are also leisure poor: because productivity is low and they must work so
-        much just to scrape by, they can’t afford to spend much time improving their condition, becoming educated, or
-        simply enjoying leisure time.
+            It means that residents of today’s poorer countries like Cambodia and Myanmar — and also of today’s richer
+            countries in the past when they were poor — are not just consumption poor, often unable to afford
+            necessities
+            like food and medicine. It means they are also leisure poor: because productivity is low and they must work
+            so
+            much just to scrape by, they can’t afford to spend much time improving their condition, becoming educated,
+            or
+            simply enjoying leisure time.
 
-        That people in poorer countries work so much more than in richer countries shows that differences in prosperity
-        are not due to differences in work ethic — they are largely due to differences in circumstance and opportunity.
+            That people in poorer countries work so much more than in richer countries shows that differences in
+            prosperity
+            are not due to differences in work ethic — they are largely due to differences in circumstance and
+            opportunity.
+        </div>
+        <svg id="chart-4" width="1000" height="600">
+        </svg>
     </div>
-    <svg id="chart-4" width="1000" height="600">
-    </svg>
+    <button onclick="location.href='scene3.html'" type="button">
+        Previous
+    </button>
 </div>
-<button onclick="location.href='scene3.html'" type="button">
-    Previous
-</button>
-
 </body>
 </html>

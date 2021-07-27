@@ -92,8 +92,8 @@ function firstChartTooltipHTML(object) {
 // Second Slide
 async function renderSecondChart() {
     const margin = {top: 10, right: 20, bottom: 30, left: 50},
-        width = 800 - margin.left - margin.right,
-        height = 600 - margin.top - margin.bottom;
+        width = 1000 - margin.left - margin.right,
+        height = 800 - margin.top - margin.bottom;
     const data = await d3.csv("https://rohitmukherjee.github.io/data/3-productivity-vs-annual-hours-worked.csv");
     const year = 2015
     const filteredData = data.filter(function (d) {

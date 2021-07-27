@@ -7,44 +7,56 @@
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
     <script src="scripts/app.js"></script>
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"
+          integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <!-- Optional theme -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css"
+          integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+    <!-- Latest compiled and minified JavaScript -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"
+            integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa"
+            crossorigin="anonymous"></script>
 </head>
 <body onload='renderSecondChart()'>
-<div id="slide-2">
-    <h2>People are able to work less when they work in more productive economies</h2>
-    <div>The key driver of rising national incomes and decreasing working hours is productivity growth.
+<div class="container">
+    <div id="slide-2">
+        <h2>People are able to work less when they work in more productive economies</h2>
+        <div>The key driver of rising national incomes and decreasing working hours is productivity growth.
 
-        Productivity refers to the rate at which inputs are turned into outputs. To understand working hours the key
-        metric is labor productivity: the economic return for one hour of work.
+            Productivity refers to the rate at which inputs are turned into outputs. To understand working hours the key
+            metric is labor productivity: the economic return for one hour of work.
 
-        At the most concrete level, labor productivity captures things like the number of breads that a baker bakes
-        in an hour, or the number of cars factory workers assemble in an hour. At the most comprehensive level, it
-        relates the total output of the economy (GDP) to the total labor input (total annual hours worked), giving
-        us the aggregate measure of labor productivity, GDP per hour of work.
+            At the most concrete level, labor productivity captures things like the number of breads that a baker bakes
+            in an hour, or the number of cars factory workers assemble in an hour. At the most comprehensive level, it
+            relates the total output of the economy (GDP) to the total labor input (total annual hours worked), giving
+            us the aggregate measure of labor productivity, GDP per hour of work.
 
-        Higher labor productivity is associated with fewer working hours, as shown in the chart here with labor
-        productivity on the horizontal axis and annual working hours on the vertical axis. The chart currently shows
-        data for the latest available year, but you can explore this relationship over time since 1950 by using the
-        blue time slider at the bottom of the chart.
+            Higher labor productivity is associated with fewer working hours, as shown in the chart here with labor
+            productivity on the horizontal axis and annual working hours on the vertical axis. The chart currently shows
+            data for the latest available year, but you can explore this relationship over time since 1950 by using the
+            blue time slider at the bottom of the chart.
 
-        We see that the same richer countries with lower working hours we noted before — like Germany and
-        Switzerland — have very high labor productivity, both at nearly 70$
-        per hour. If workers can produce more with each hour of work, it becomes possible for them to work less.
+            We see that the same richer countries with lower working hours we noted before — like Germany and
+            Switzerland — have very high labor productivity, both at nearly 70$
+            per hour. If workers can produce more with each hour of work, it becomes possible for them to work less.
 
-        Though this doesn’t necessarily mean they actually do work less — workers in the US and Singapore, for
-        instance,
-        work many more hours than their counterparts in countries with similar productivity.4
+            Though this doesn’t necessarily mean they actually do work less — workers in the US and Singapore, for
+            instance,
+            work many more hours than their counterparts in countries with similar productivity.4
 
-        In contrast, the countries toward the top-left of this chart have far lower labor productivity — Cambodia,
-        for example, is at only 2$ per hour — and thus workers there need to work many more hours to compensate.
+            In contrast, the countries toward the top-left of this chart have far lower labor productivity — Cambodia,
+            for example, is at only 2$ per hour — and thus workers there need to work many more hours to compensate.
+        </div>
+        <div id="chart-2">
+        </div>
     </div>
-    <div id="chart-2">
-    </div>
+    <button onclick="location.href='index.html'" type="button">
+        Previous
+    </button>
+    <button onclick="location.href='scene3.html'" type="button">
+        Next
+    </button>
 </div>
-<button onclick="location.href='index.html'" type="button">
-    Previous
-</button>
-<button onclick="location.href='scene3.html'" type="button">
-    Next
-</button>
 </body>
 </html>
