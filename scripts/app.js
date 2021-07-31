@@ -46,8 +46,9 @@ async function renderFirstChart() {
         .attr("class", "tooltip")
         .style("background-color", "black")
         .style("border-radius", "5px")
-        .style("padding", "10px")
+        .style("padding", "10")
         .style("color", "white")
+        .style("height", "50px")
 
     // Add dots
     svg.append('g')
@@ -84,12 +85,53 @@ async function renderFirstChart() {
         .style("fill", function (d) {
             return myColor(d.continent);
         });
-
     renderLegend(svg, getContinentKeys(), width, myColor);
+    countryCodesToAnnotate().forEach(function (countryCode) {
+        for (let i = 0; i < filteredData.length; i++) {
+            if (filteredData[i].code === countryCode) {
+                const countryData = filteredData[i];
+                renderFirstChartAnnotations(countryData, x(Number(countryData.gdp_per_capita)), y(Number(countryData.average_annual_hours_worked)), margin);
+            }
+        }
+    })
+}
+
+function renderFirstChartAnnotations(d, x, y, margin) {
+    const annotations = [
+        {
+            note: {
+                label: d.total_population + " people $" + d.gdp_per_capita + "/year",
+                lineType: "none",
+                bgPadding: {"top": 15, "left": 10, "right": 10, "bottom": 10},
+                title: d.entity,
+                orientation: "leftRight",
+                "align": "middle"
+            },
+            type: d3.annotationCallout,
+            subject: {radius: 30},
+            x: x,
+            y: y,
+            dx: 30,
+            dy: 0
+        },
+    ];
+    console.log("loading first chart annotations");
+    const makeAnnotations = d3.annotation().annotations(annotations);
+
+    d3.select("svg")
+        .append("g")
+        .attr("transform",
+            "translate(" + margin.left + "," + margin.top + ")")
+        .attr("class", "annotation-group")
+        .call(makeAnnotations)
 }
 
 function firstChartTooltipHTML(object) {
-    return "<div>Country: " + object.entity + "</div><div>Population: " + object.total_population + "</div><div>GDP per capita: $" + object.gdp_per_capita + "</div>";
+    return "<div>" + object.entity + "</div><div>" + object.total_population + " people</div><div>$" + object.gdp_per_capita + "/year</div>";
+}
+
+function countryCodesToAnnotate() {
+    return ["MMR", "FRA", "USA"]
 }
 
 // Second Slide
@@ -184,12 +226,11 @@ async function renderSecondChart() {
 }
 
 function secondChartTooltipHTML(object) {
-    return "<div>Country: " + object.entity + "</div><div>Population: " + object.total_population + "</div><div>Productivity: $" + object.productivity + "\/hour</div>";
+    return "<div>" + object.entity + "</div><div>" + object.total_population + " people</div><div>$" + object.productivity + "\/hour</div>";
 }
 
+
 // Third Slide
-
-
 async function renderThirdChart() {
     const margin = {top: 10, right: 20, bottom: 30, left: 50},
         width = 800 - margin.left - margin.right,

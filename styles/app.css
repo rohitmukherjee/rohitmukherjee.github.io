@@ -20,6 +20,14 @@ div.tooltip {
     pointer-events: none;
 }
 
+.font-size-lg {
+    font-size: 1.2em;
+}
+
+ul {
+    list-style-type: none;
+}
+
 .mt-50 {
     margin-top: 50px;
 }
