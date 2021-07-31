@@ -382,7 +382,6 @@ function renderFourthChart() {
         height = +svg.attr("height");
 
 // Map and projection
-    const path = d3.geoPath();
     const projection = d3.geoMercator()
         .scale(70)
         .center([0, 20])
@@ -392,13 +391,15 @@ function renderFourthChart() {
     let data = new Map()
     const colorScale = d3.scaleOrdinal()
         .domain(getContinentKeys())
-        .range(d3.schemeOranges[9]);
+        .range(d3.schemeSet2);
 
 // Load external data and boot
     Promise.all([
         d3.json("https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/world.geojson"),
-        d3.csv("https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/world_population.csv", function (d) {
-            data.set(d.code, +d.pop)
+        d3.csv("https://rohitmukherjee.github.io/data/1-annual-working-hours-vs-gdp-per-capita-pwt.csv", function (d) {
+            if (d.gdp_per_capita != "" && d.year == 2015) {
+                data.set(d.code, {year: d.year, gdp_per_capita: Number(d.gdp_per_capita), continent: d.continent});
+            }
         })
     ]).then(function (loadData) {
         let topo = loadData[0]
@@ -414,8 +415,14 @@ function renderFourthChart() {
             )
             // set the color of each country
             .attr("fill", function (d) {
-                d.total = data.get(d.id) || 0;
-                return colorScale(d.total);
+                console.log(data);
+                console.log(d.id);
+                console.log(data.get(d.id));
+                if (!data.has(d.id)) {
+                    return 0;
+                } else {
+                    return colorScale(data.get(d.id).continent);
+                }
             })
     })
 
