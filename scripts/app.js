@@ -115,7 +115,35 @@ function renderFirstChartAnnotations(d, x, y, margin) {
             dy: 0
         },
     ];
-    console.log("loading first chart annotations");
+    const makeAnnotations = d3.annotation().annotations(annotations);
+
+    d3.select("svg")
+        .append("g")
+        .attr("transform",
+            "translate(" + margin.left + "," + margin.top + ")")
+        .attr("class", "annotation-group")
+        .call(makeAnnotations)
+}
+
+function renderSecondChartAnnotations(d, x, y, margin) {
+    const annotations = [
+        {
+            note: {
+                label: d.total_population + " people   " + d.productivity + " $/hour",
+                lineType: "none",
+                bgPadding: {"top": 15, "left": 10, "right": 10, "bottom": 10},
+                title: d.entity,
+                orientation: "leftRight",
+                "align": "middle"
+            },
+            type: d3.annotationCallout,
+            subject: {radius: 30},
+            x: x,
+            y: y,
+            dx: 30,
+            dy: 0
+        },
+    ];
     const makeAnnotations = d3.annotation().annotations(annotations);
 
     d3.select("svg")
@@ -223,6 +251,14 @@ async function renderSecondChart() {
             return myColor(d.continent);
         });
     renderLegend(svg, getContinentKeys(), width, myColor);
+    countryCodesToAnnotate().forEach(function (countryCode) {
+        for (let i = 0; i < filteredData.length; i++) {
+            if (filteredData[i].code === countryCode) {
+                const countryData = filteredData[i];
+                renderSecondChartAnnotations(countryData, x(Number(countryData.productivity)), y(Number(countryData.average_annual_hours_worked)), margin);
+            }
+        }
+    })
 }
 
 function secondChartTooltipHTML(object) {
