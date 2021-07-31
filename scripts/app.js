@@ -62,6 +62,9 @@ async function renderFirstChart() {
         .attr("cy", function (d) {
             return y(Number(d.average_annual_hours_worked));
         })
+        .attr("id", function (d) {
+            return "bubble-" + d.code;
+        })
         .attr("r", function (d) {
             return z(Number(d.total_population));
         })
@@ -145,6 +148,9 @@ async function renderSecondChart() {
         .enter()
         .append("circle")
         .attr("class", "bubbles")
+        .attr("id", function (d) {
+            return "bubble-" + d.code;
+        })
         .attr("cx", function (d) {
             return x(Number(d.productivity));
         })
@@ -238,6 +244,7 @@ async function renderThirdChart() {
     const line = svg
         .append('g')
         .append("path")
+        .attr("id", "line-" + entities[0])
         .datum(filteredData.filter(function (d) {
             return d.entity === entities[0];
         }))
@@ -258,7 +265,6 @@ async function renderThirdChart() {
     function update(selectedGroup) {
         // Create new data with the selection?
         const dataFilter = filteredData.filter(function (d) {
-
             return d.entity === selectedGroup;
         });
 
@@ -267,6 +273,7 @@ async function renderThirdChart() {
             .datum(dataFilter)
             .transition()
             .duration(1000)
+            .attr("id", "line-" + selectedGroup)
             .attr("d", d3.line()
                 .x(function (d) {
                     return x(Number(d.year))
