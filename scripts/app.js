@@ -387,6 +387,16 @@ function renderFourthChart() {
         .center([0, 20])
         .translate([width / 2, height / 2]);
 
+    const tooltip = d3.select("#slide-4")
+        .append("div")
+        .style("opacity", 0)
+        .attr("class", "tooltip")
+        .style("background-color", "black")
+        .style("border-radius", "5px")
+        .style("padding", "10")
+        .style("color", "white")
+        .style("height", "50px")
+
 // Data and color scale
     let data = new Map()
     const colorScale = d3.scaleOrdinal()
@@ -397,8 +407,14 @@ function renderFourthChart() {
     Promise.all([
         d3.json("https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/world.geojson"),
         d3.csv("https://rohitmukherjee.github.io/data/1-annual-working-hours-vs-gdp-per-capita-pwt.csv", function (d) {
-            if (d.gdp_per_capita != "" && d.year == 2015) {
-                data.set(d.code, {year: d.year, gdp_per_capita: Number(d.gdp_per_capita), continent: d.continent});
+            if (d.year == 2015) {
+                data.set(d.code,
+                    {
+                        year: d.year,
+                        gdp_per_capita: Number(d.gdp_per_capita),
+                        name: d.entity,
+                        continent: d.continent
+                    });
             }
         })
     ]).then(function (loadData) {
@@ -415,17 +431,31 @@ function renderFourthChart() {
             )
             // set the color of each country
             .attr("fill", function (d) {
-                console.log(data);
-                console.log(d.id);
-                console.log(data.get(d.id));
                 if (!data.has(d.id)) {
                     return 0;
                 } else {
                     return colorScale(data.get(d.id).continent);
                 }
             })
+            .on("mouseover", function (event, d) {
+                tooltip.transition()
+                    .duration(200)
+                    .style("opacity", .9);
+                tooltip.html(fourthChartTooltipHTML(data.get(d.id)));
+                tooltip.style("left", (event.pageX) + "px")
+                    .style("top", (event.pageY - 28) + "px")
+            })
+            .on("mouseout", function (d) {
+                tooltip.transition()
+                    .duration(500)
+                    .style("opacity", 0);
+            })
     })
 
+}
+
+function fourthChartTooltipHTML(d) {
+    return d.name + " $" + d.gdp_per_capita;
 }
 
 // Common functions

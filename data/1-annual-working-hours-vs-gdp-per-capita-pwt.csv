@@ -1,6 +1,6 @@
 entity,code,year,average_annual_hours_worked,gdp_per_capita,total_population,continent
 Abkhazia,OWID_ABK,2015,,,,Asia
-Afghanistan,AFG,1800,,,3280000,
+Afghanistan,AFG,1800,,,3280000,Asia
 Afghanistan,AFG,1801,,,3280000,
 Afghanistan,AFG,1802,,,3280000,
 Afghanistan,AFG,1803,,,3280000,
@@ -1063,7 +1063,7 @@ Andorra,AND,2016,,,77000,
 Andorra,AND,2017,,,77000,
 Andorra,AND,2018,,,77000,
 Andorra,AND,2019,,,77000,
-Angola,AGO,1800,,,1567028,
+Angola,AGO,1800,,,1567028,Africa
 Angola,AGO,1801,,,1567028,
 Angola,AGO,1802,,,1567028,
 Angola,AGO,1803,,,1567028,
@@ -18994,7 +18994,7 @@ Indonesia,IDN,2016,2024.287,10123.332,261556000,
 Indonesia,IDN,2017,2024.287,10594.067,264651008,
 Indonesia,IDN,2018,,,267671008,
 Indonesia,IDN,2019,,,270625984,
-Iran,IRN,1800,,,6269721,
+Iran,IRN,1800,,,6269721,Asia
 Iran,IRN,1801,,,6283925,
 Iran,IRN,1802,,,6298161,
 Iran,IRN,1803,,,6312430,
