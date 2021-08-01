@@ -48,7 +48,7 @@ async function renderFirstChart() {
         .style("border-radius", "5px")
         .style("padding", "10")
         .style("color", "white")
-        .style("height", "50px")
+        .style("height", "85px")
 
     // Add dots
     svg.append('g')
@@ -100,7 +100,7 @@ function renderFirstChartAnnotations(d, x, y, margin) {
     const annotations = [
         {
             note: {
-                label: d.total_population + " people $" + d.gdp_per_capita + "/year",
+                label: d.total_population + " people $" + d.gdp_per_capita + "/year " + d.average_annual_hours_worked + " hrs/yr",
                 lineType: "none",
                 bgPadding: {"top": 15, "left": 10, "right": 10, "bottom": 10},
                 title: d.entity,
@@ -154,8 +154,39 @@ function renderSecondChartAnnotations(d, x, y, margin) {
         .call(makeAnnotations)
 }
 
+function renderThirdChartAnnotations(d, x, y, margin) {
+    d3.select(".annotation-group").remove();
+    const annotations = [
+        {
+            note: {
+                label: "An average worker makes " + Math.round(d.productivity) + " $/hour",
+                lineType: "none",
+                bgPadding: {"top": 15, "left": 10, "right": 10, "bottom": 10},
+                title: d.entity,
+                orientation: "topBottom",
+                align: "top"
+            },
+            type: d3.annotationCalloutCircle,
+            subject: {radius: 30},
+            x: x,
+            y: y,
+            dx: -100,
+            dy: -10
+        },
+    ];
+    const makeAnnotations = d3.annotation().annotations(annotations);
+    const chart = d3.select("svg")
+    chart.transition()
+        .duration(1000);
+    chart.append("g")
+        .attr("transform",
+            "translate(" + margin.left + "," + margin.top + ")")
+        .attr("class", "annotation-group")
+        .call(makeAnnotations)
+}
+
 function firstChartTooltipHTML(object) {
-    return "<div>" + object.entity + "</div><div>" + object.total_population + " people</div><div>$" + object.gdp_per_capita + "/year</div>";
+    return "<div>" + object.entity + "</div><div>" + object.total_population + " people</div><div>$" + object.gdp_per_capita + "/year</div><div>" + object.average_annual_hours_worked + " hrs worked yearly</div>";
 }
 
 function countryCodesToAnnotate() {
@@ -318,13 +349,14 @@ async function renderThirdChart() {
         .call(d3.axisLeft(y).tickFormat(d => d + " $/hr"));
 
     // Initialize line with group a
+    const firstCountryData = filteredData.filter(function (d) {
+        return d.entity === entities[0]
+    });
     const line = svg
         .append('g')
         .append("path")
         .attr("id", "line-" + entities[0])
-        .datum(filteredData.filter(function (d) {
-            return d.entity === entities[0];
-        }))
+        .datum(firstCountryData)
         .attr("d", d3.line()
             .x(function (d) {
                 return x(Number(d.year))
@@ -338,16 +370,18 @@ async function renderThirdChart() {
         })
         .style("stroke-width", 4)
         .style("fill", "none")
+    const mostRecentFirstCountryData = firstCountryData[firstCountryData.length - 1]
+    renderThirdChartAnnotations(mostRecentFirstCountryData, x(Number(mostRecentFirstCountryData.year)) - 10, y(Number(mostRecentFirstCountryData.productivity)) - 10, margin);
 
     function update(selectedGroup) {
         // Create new data with the selection?
-        const dataFilter = filteredData.filter(function (d) {
+        const countryData = filteredData.filter(function (d) {
             return d.entity === selectedGroup;
         });
 
         // Give these new data to update line
         line
-            .datum(dataFilter)
+            .datum(countryData)
             .transition()
             .duration(1000)
             .attr("id", "line-" + selectedGroup)
@@ -362,6 +396,10 @@ async function renderThirdChart() {
             .attr("stroke", function (d) {
                 return myColor(selectedGroup)
             })
+
+        // update the annotation
+        const finalCountryData = countryData[countryData.length - 1];
+        renderThirdChartAnnotations(finalCountryData, x(Number(finalCountryData.year)) - 10, y(finalCountryData.productivity) - 10, margin)
     }
 
     // When the button is changed, run the updateChart function
@@ -370,6 +408,7 @@ async function renderThirdChart() {
         const selectedOption = d3.select(this).property("value")
         // run the updateChart function with this selected option
         update(selectedOption)
+
     })
 
 }
@@ -395,7 +434,7 @@ function renderFourthChart() {
         .style("border-radius", "5px")
         .style("padding", "10")
         .style("color", "white")
-        .style("height", "50px")
+        .style("height", "80px")
 
 // Data and color scale
     let data = new Map()
