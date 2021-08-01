@@ -452,6 +452,8 @@ function renderFourthChart() {
             })
     })
 
+    renderLegend(d3.select("#chart-4"), getContinentKeys(), width, colorScale);
+
 }
 
 function fourthChartTooltipHTML(d) {
