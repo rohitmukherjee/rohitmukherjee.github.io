@@ -48,7 +48,8 @@ async function renderFirstChart() {
         .style("border-radius", "5px")
         .style("padding", "10")
         .style("color", "white")
-        .style("height", "85px")
+        .style("width", "150px")
+        .style("height", "50px")
 
     // Add dots
     svg.append('g')
@@ -97,10 +98,12 @@ async function renderFirstChart() {
 }
 
 function renderFirstChartAnnotations(d, x, y, margin) {
+    const computedDX = d.entity == "France" ? -30 : 30;
+    const computedDY = d.entity == "France" ? 30 : -30;
     const annotations = [
         {
             note: {
-                label: d.total_population + " people $" + d.gdp_per_capita + "/year " + d.average_annual_hours_worked + " hrs/yr",
+                label: "$" + Math.round(d.gdp_per_capita) + "/year, " + Math.round(d.average_annual_hours_worked) + " hrs/yr",
                 lineType: "none",
                 bgPadding: {"top": 15, "left": 10, "right": 10, "bottom": 10},
                 title: d.entity,
@@ -111,8 +114,8 @@ function renderFirstChartAnnotations(d, x, y, margin) {
             subject: {radius: 30},
             x: x,
             y: y,
-            dx: 30,
-            dy: 0
+            dx: computedDX,
+            dy: computedDY
         },
     ];
     const makeAnnotations = d3.annotation().annotations(annotations);
@@ -126,10 +129,12 @@ function renderFirstChartAnnotations(d, x, y, margin) {
 }
 
 function renderSecondChartAnnotations(d, x, y, margin) {
+    const computedDX = d.entity == "France" ? -30 : 30;
+    const computedDY = d.entity == "France" ? 30 : -30;
     const annotations = [
         {
             note: {
-                label: d.total_population + " people   " + d.productivity + " $/hour",
+                label: Math.round(d.productivity) + " $/hour, " + Math.round(d.average_annual_hours_worked) + " hrs/yr",
                 lineType: "none",
                 bgPadding: {"top": 15, "left": 10, "right": 10, "bottom": 10},
                 title: d.entity,
@@ -140,8 +145,8 @@ function renderSecondChartAnnotations(d, x, y, margin) {
             subject: {radius: 30},
             x: x,
             y: y,
-            dx: 30,
-            dy: 0
+            dx: computedDX,
+            dy: computedDY
         },
     ];
     const makeAnnotations = d3.annotation().annotations(annotations);
@@ -186,7 +191,7 @@ function renderThirdChartAnnotations(d, x, y, margin) {
 }
 
 function firstChartTooltipHTML(object) {
-    return "<div>" + object.entity + "</div><div>" + object.total_population + " people</div><div>$" + object.gdp_per_capita + "/year</div><div>" + object.average_annual_hours_worked + " hrs worked yearly</div>";
+    return "<div>" + object.entity + "</div><div>$" + Math.round(object.gdp_per_capita) + "/year</div><div>" + Math.round(object.average_annual_hours_worked) + " hrs worked yearly</div>";
 }
 
 function countryCodesToAnnotate() {
@@ -233,14 +238,15 @@ async function renderSecondChart() {
         .range(d3.schemeSet2);
 
     // -1- Create a tooltip div that is hidden by default:
-    var tooltip = d3.select("#chart-2")
+    const tooltip = d3.select("#chart-2")
         .append("div")
         .style("opacity", 0)
         .attr("class", "tooltip")
         .style("background-color", "black")
         .style("border-radius", "5px")
-        .style("padding", "10px")
         .style("color", "white")
+        .style("width", "150px")
+        .style("height", "50px")
 
     // Add dots
     svg.append('g')
@@ -293,7 +299,7 @@ async function renderSecondChart() {
 }
 
 function secondChartTooltipHTML(object) {
-    return "<div>" + object.entity + "</div><div>" + object.total_population + " people</div><div>$" + object.productivity + "\/hour</div>";
+    return "<div>" + object.entity + "</div><div>$" + Math.round(object.productivity) + "\/hour</div><div>" + Math.round(object.average_annual_hours_worked) + " hrs worked yearly</div>";
 }
 
 
@@ -434,7 +440,8 @@ function renderFourthChart() {
         .style("border-radius", "5px")
         .style("padding", "10")
         .style("color", "white")
-        .style("height", "80px")
+        .style("width", "150px")
+        .style("height", "50px")
 
 // Data and color scale
     let data = new Map()
@@ -452,6 +459,7 @@ function renderFourthChart() {
                         year: d.year,
                         gdp_per_capita: Number(d.gdp_per_capita),
                         name: d.entity,
+                        population: d.total_population,
                         continent: d.continent
                     });
             }
@@ -495,8 +503,8 @@ function renderFourthChart() {
 
 }
 
-function fourthChartTooltipHTML(d) {
-    return d.name + " $" + d.gdp_per_capita;
+function fourthChartTooltipHTML(object) {
+    return "<div>" + object.name + "</div><div>" + object.population + " people</div><div>$" + Math.round(object.gdp_per_capita) + "/year</div>";
 }
 
 // Common functions
