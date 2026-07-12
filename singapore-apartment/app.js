@@ -58,6 +58,7 @@ const state = {
   chartProjects: new Set(),
   chartDistricts: new Set(),  // independent of the top-of-page district filter - scoped to the chart only
   chartMetric: 'both',        // 'sale' | 'rent' | 'both'
+  rateMode: 'flat',           // 'flat' | 'chunked' - opportunity-cost chart's mortgage rate assumption
 };
 
 // ---------------- utilities ----------------
@@ -219,6 +220,39 @@ function fvAnnuity(payment, months, monthlyRate){
   if(months<=0 || payment<=0) return 0;
   if(Math.abs(monthlyRate) < 1e-9) return payment*months;
   return payment*(Math.pow(1+monthlyRate,months)-1)/monthlyRate;
+}
+// Simulates the FULL month-by-month amortization given a piecewise interest-rate schedule.
+// periods: [{years, ratePct}, ...] - the LAST period's rate applies to all remaining months
+// through the end of tenureYrs, regardless of its own `years`. At every rate change, the payment
+// is RECALCULATED to fully amortize the remaining balance over the remaining original tenure -
+// this is standard behavior for an SG mortgage that reprices without refinancing elsewhere (same
+// payoff date, new installment). Verified against the single-rate closed-form functions above
+// (loanBalanceAt/year1InterestPrincipal) to the 6th decimal, and against independent hand-checked
+// multi-period math (3 different rates over a 10yr loan, ending at exactly $0 balance).
+// Returns an array indexed by month (0=starting balance before any payment, 1..totalMonths=after
+// that month's payment), each entry {balance, ratePct, payment, interest, principal}.
+function simulateAmortization(loan, tenureYrs, periods){
+  const totalMonths = Math.round(tenureYrs*12);
+  const sched = [{balance: loan, ratePct: periods[0].ratePct, payment: null, interest: 0, principal: 0}];
+  let bal = loan, periodIdx = 0, periodStartMonth = 0, payment = null;
+  for(let m=1; m<=totalMonths; m++){
+    while(periodIdx < periods.length-1 && (m-1) >= periodStartMonth + periods[periodIdx].years*12){
+      periodStartMonth += periods[periodIdx].years*12;
+      periodIdx++;
+      payment = null; // force recompute at the reprice point
+    }
+    const ratePct = periods[periodIdx].ratePct;
+    const rm = ratePct/100/12;
+    if(payment==null){
+      const remainingMonths = totalMonths-(m-1);
+      payment = pmt(rm, remainingMonths, bal);
+    }
+    const interest = bal*rm;
+    const principal = Math.min(payment-interest, bal);
+    bal = Math.max(bal-principal, 0);
+    sched.push({balance: bal, ratePct, payment, interest, principal});
+  }
+  return sched;
 }
 
 // ---------------- filtering ----------------
@@ -382,7 +416,7 @@ function render(){
   // Matched table
   matched.sort((a,b)=>b.grossYield-a.grossYield);
   document.querySelector('#matchedTable thead').innerHTML = '<tr><th>District</th><th>Project</th><th>Size band</th><th>Tenure</th><th>Sales n</th>'+
-    `<th>Price (${priceLabel})</th><th>Rent n</th><th>Rent (${priceLabel})</th><th>Gross Yield</th><th></th></tr>`;
+    `<th>Price (${priceLabel})</th><th>Rent n</th><th>Rent (${priceLabel})</th><th>Gross Yield${infoTip("Annual rent divided by purchase price, before any costs, mortgage, or tax. A quick, rough-and-ready measure of a property's income potential - not the same as actual after-tax cash flow.", true)}</th><th></th></tr>`;
   document.querySelector('#matchedTable tbody').innerHTML = matched.map((r,idx)=>`<tr>
     <td>${r.district}</td><td>${pgLink(r.project)}</td><td>${BAND_NAMES[r.band]}</td><td>${r.tenure}</td><td>${r.n}</td>
     <td>${fmtCur(r.price)}</td><td>${r.rentN}</td><td>${fmtCur(r.rent)}</td>
@@ -411,7 +445,8 @@ function render(){
     const be = breakevenLTV(r.price, r.rent, cRate, cTenure, cMcst, cIns, cAgent, cRepair, cVac, cIncome);
     return {...r, breakeven: be};
   }).sort((a,b)=> (b.breakeven??-1)-(a.breakeven??-1));
-  document.querySelector('#breakevenTable thead').innerHTML = '<tr><th>District</th><th>Project</th><th>Size band</th><th>Price</th><th>Rent</th><th>Gross Yield</th><th>Breakeven LTV</th><th>At 75% LTV?</th></tr>';
+  document.querySelector('#breakevenTable thead').innerHTML = '<tr><th>District</th><th>Project</th><th>Size band</th><th>Price</th><th>Rent</th><th>Gross Yield</th>'+
+    `<th>Breakeven LTV${infoTip("The HIGHEST loan-to-value at which monthly cash flow (rent minus mortgage minus running costs minus tax) still stays at or above $0. Higher is better - it means the property can support a bigger, more typical loan without a monthly cash shortfall.", true)}</th><th>At 75% LTV?</th></tr>`;
   document.querySelector('#breakevenTable tbody').innerHTML = beRows.map(r=>{
     const beTxt = r.breakeven==null? 'never (rent &lt; opex+tax)' : (r.breakeven*100).toFixed(1)+'%';
     const cls = r.breakeven==null? 'bad' : (r.breakeven>=0.75?'good':(r.breakeven>=0.5?'warn':'bad'));
@@ -441,9 +476,9 @@ function renderCalc(){
     <div class="calcline"><span>Gross yield</span><span>${fmtPct(c.grossYield)}</span></div>
     <div class="calcline"><span>Loan amount (${ltv}% LTV)</span><span>${fmtCur(c.loan)}</span></div>
     <div class="calcline"><span>Monthly mortgage (P&amp;I)</span><span>${fmtCur(c.mortM)}</span></div>
-    <div class="calcline"><span>Property tax (non-owner-occ., annual)</span><span>${fmtCur(c.ptax)}</span></div>
+    <div class="calcline"><span>Property tax (non-owner-occ., annual)${infoTip("IRAS's non-owner-occupied residential rates (12/20/28/36% at $30k/$45k/$60k of Annual Value). Based on the unit's FULL market rent, not the vacancy-discounted figure - IRAS assesses Annual Value from comparable market rentals regardless of actual occupancy.")}</span><span>${fmtCur(c.ptax)}</span></div>
     <div class="calcline"><span>MCST + insurance + leasing agent + repairs (annual)</span><span>${fmtCur(c.mcstAnnual+ins+c.agentAmt+c.repairAmt)}</span></div>
-    <div class="calcline"><span>Marginal tax rate on this rental profit (stacked on ${fmtCur(income)} other chargeable income)</span><span>${c.marginalRate!=null?fmtPct(c.marginalRate):'0.00% (loss - no tax)'}</span></div>
+    <div class="calcline"><span>Marginal tax rate on this rental profit (stacked on ${fmtCur(income)} other chargeable income)${infoTip("Rental profit is taxed as the TOP slice on top of your other chargeable income, using Singapore's real progressive resident tax brackets - not a flat guessed rate. A higher 'other income' pushes the rental profit into a higher bracket.")}</span><span>${c.marginalRate!=null?fmtPct(c.marginalRate):'0.00% (loss - no tax)'}</span></div>
     <div class="calcline"><span>Income tax on rental profit (annual, exact Yr-1 interest)</span><span>${fmtCur(c.incomeTax)}</span></div>
     <div class="calcline total"><span>Net cash flow after tax (monthly)</span><span class="${c.aftertaxMonthly>=0?'good':'bad'}">${fmtCur(c.aftertaxMonthly)}</span></div>
     <div class="calcline"><span>&nbsp;&nbsp;of which, principal repaid (equity build)</span><span>${fmtCur(c.principalYr1/12)}</span></div>
@@ -452,8 +487,8 @@ function renderCalc(){
     <div class="small" style="margin-top:8px;">"Net cash flow after tax" is what actually leaves your bank account each month. "True economic" cash flow adds back the mortgage principal portion, since that money converts into home equity rather than being spent. Year-1 interest is computed exactly via amortization. Income tax uses Singapore's real progressive resident brackets (IRAS, YA2024 onwards) applied to the rental profit as the TOP slice of the buyer's income, not a flat guessed rate.</div>
     <div class="calcline total" style="margin-top:14px;border-top:1px solid var(--border);padding-top:10px;"><span>Upfront cash required at purchase</span><span></span></div>
     <div class="calcline"><span>Down payment (${(100-ltv).toFixed(1)}% of price)</span><span>${fmtCur(up.downPayment)}</span></div>
-    <div class="calcline"><span>Buyer's Stamp Duty (BSD, progressive scale)</span><span>${fmtCur(up.bsd)}</span></div>
-    <div class="calcline"><span>Additional Buyer's Stamp Duty (ABSD, ${absdPct}%)</span><span>${fmtCur(up.absd)}</span></div>
+    <div class="calcline"><span>Buyer's Stamp Duty (BSD, progressive scale)${infoTip("A tax on the purchase price paid by every property buyer in Singapore, regardless of citizenship. Progressive scale from 1% to 6% depending on price tier, per IRAS.")}</span><span>${fmtCur(up.bsd)}</span></div>
+    <div class="calcline"><span>Additional Buyer's Stamp Duty (ABSD, ${absdPct}%)${infoTip("An extra flat-rate tax on top of BSD, applied based on the buyer's own citizenship/PR status and how many residential properties are already in their name - select the matching profile above.")}</span><span>${fmtCur(up.absd)}</span></div>
     <div class="calcline"><span>Buyer's own agent commission (${buyerAgentPct}% of price)</span><span>${fmtCur(up.buyerAgentAmt)}</span></div>
     <div class="calcline"><span>Legal &amp; misc costs</span><span>${fmtCur(up.legalMisc)}</span></div>
     <div class="calcline total"><span>Total cash needed at purchase</span><span>${fmtCur(up.total)}</span></div>
@@ -505,6 +540,10 @@ function describeGrowth(g){
   return `Computed from real transacted PSF, ${g.source}: ${g.firstQ} ($${Math.round(g.firstPsf)}/sqft) → ${g.lastQ} ($${Math.round(g.lastPsf)}/sqft) over ${g.years.toFixed(1)} yrs, n=${g.n.toLocaleString()} sale txns → ${(g.cagr*100).toFixed(2)}% CAGR. Editable above - click "Use" on a matched-project row to recompute for that specific project/district.`;
 }
 function escapeXml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+// Hover info button for dynamically-rendered labels/headers (mirrors the static .info-tip markup in
+// index.html). `below=true` for anything inside a scrolling .tablewrap (e.g. sticky <th>), since a
+// tooltip popping upward there would be clipped by the container's overflow:auto.
+function infoTip(text, below){ return `<span class="info-tip${below?' below':''}" tabindex="0">i<span class="info-bubble">${escapeXml(text)}</span></span>`; }
 // keyLevels: [{value, label, color}] - drawn as precise dashed reference lines with exact $ labels
 // on the right axis (start point, each series' final value), in addition to the generic gridlines.
 function drawOppChart(years, series, keyLevels){
@@ -547,25 +586,59 @@ function drawOppChart(years, series, keyLevels){
   svg.innerHTML = parts.join('');
   wrap.innerHTML = series.map(s=>`<span class="legend-item"><span class="legend-swatch" style="${s.dash?`background:transparent;border:2px dashed ${s.color};`:`background:${s.color};`}"></span>${s.label} — final: ${fmtCur(s.values[s.values.length-1])}</span>`).join('');
 }
+// Builds the piecewise rate schedule fed to simulateAmortization(), from the rate-mode toggle.
+// 'flat' = single rate (cRate) for the whole tenure, matching the main calculator exactly.
+// 'chunked' = up to 3 periods (Years 1-N, N+1-2N, 2N+1-onwards), each independently editable -
+// lets you model a fixed-rate period followed by a reprice, e.g. a 3yr fixed SG mortgage package
+// reverting to a floating/reference rate afterwards, rather than assuming one rate forever.
+function buildRatePeriods(){
+  const baseRate = +document.getElementById('cRate').value;
+  if(state.rateMode!=='chunked') return [{years: 9999, ratePct: baseRate}];
+  const periodYrs = Math.max(1, +document.getElementById('cRatePeriodYrs').value || 3);
+  const r1 = +document.getElementById('cRateY1').value, r2 = +document.getElementById('cRateY2').value, r3 = +document.getElementById('cRateY3').value;
+  return [{years: periodYrs, ratePct: r1}, {years: periodYrs, ratePct: r2}, {years: 9999, ratePct: r3}];
+}
+// After-tax monthly cash flow DURING calendar year t (t=0 is Year 1 of ownership), using the
+// schedule's actual interest/payment for that year - so a rate reprice mid-horizon correctly
+// changes both the mortgage payment AND the interest tax-deduction from that year onward. Rent,
+// MCST, insurance, agent/repair %, and property tax are held flat at today's levels throughout
+// (no rent growth or expense inflation is modeled - flagged in the on-page caveat).
+function cashFlowForYear(t, schedule, rent, mcst, ins, agent, repair, vac, income){
+  const startMonth=t*12+1, endMonth=(t+1)*12;
+  let yearInterest=0, yearPaymentTotal=0, activeRatePct=null;
+  for(let m=startMonth;m<=endMonth;m++){
+    if(m<schedule.length){
+      yearInterest+=schedule[m].interest;
+      yearPaymentTotal+=(schedule[m].interest+schedule[m].principal);
+      if(activeRatePct==null) activeRatePct=schedule[m].ratePct;
+    }
+    // months past the schedule's length = loan already fully repaid: contributes $0 interest and
+    // $0 payment for the rest of that year, which correctly makes cash flow jump up once paid off.
+  }
+  const effAnnualRent = rent*(12-vac);
+  const ptax = propertyTaxAnnual(rent*12);
+  const agentAmt=effAnnualRent*(agent/100), repairAmt=effAnnualRent*(repair/100), mcstAnnual=mcst*12;
+  const pretaxAnnual = effAnnualRent - yearPaymentTotal - mcstAnnual - ins - agentAmt - repairAmt - ptax;
+  const taxableProfit = effAnnualRent - yearInterest - mcstAnnual - ins - agentAmt - repairAmt - ptax;
+  const incomeTax = marginalTax(income, Math.max(taxableProfit,0));
+  const aftertaxAnnual = pretaxAnnual - incomeTax;
+  return {monthlyCF: aftertaxAnnual/12, activeRatePct};
+}
 function renderOppCost(){
   const price=+document.getElementById('cPrice').value, rent=+document.getElementById('cRent').value,
-        ltv=+document.getElementById('cLTV').value, rate=+document.getElementById('cRate').value,
-        tenure=+document.getElementById('cTenure').value, mcst=+document.getElementById('cMcst').value,
-        ins=+document.getElementById('cIns').value, agent=+document.getElementById('cAgent').value,
-        repair=+document.getElementById('cRepair').value, vac=+document.getElementById('cVac').value,
-        income=+document.getElementById('cIncome').value,
+        ltv=+document.getElementById('cLTV').value, tenure=+document.getElementById('cTenure').value,
+        mcst=+document.getElementById('cMcst').value, ins=+document.getElementById('cIns').value,
+        agent=+document.getElementById('cAgent').value, repair=+document.getElementById('cRepair').value,
+        vac=+document.getElementById('cVac').value, income=+document.getElementById('cIncome').value,
         absdPct=+document.getElementById('cAbsd').value, buyerAgentPct=+document.getElementById('cBuyerAgent').value,
         legal=+document.getElementById('cLegal').value, growthPct=+document.getElementById('cGrowth').value,
         oppCagr=+document.getElementById('cOppCagr').value,
         horizon=Math.max(1, Math.round(+document.getElementById('cHorizon').value || 10));
   const up = upfrontCosts(price, ltv, absdPct, buyerAgentPct, legal);
-  const c = calcCashFlow(price, rent, ltv, rate, tenure, mcst, ins, agent, repair, vac, income);
   const loan = price*(ltv/100);
-  // Year-1 monthly after-tax cash flow, held flat across the whole horizon (the tool doesn't
-  // project rent growth or expense inflation year-by-year, so this is a simplification - flagged
-  // in the caveat below).
-  const monthlyCF = c.aftertaxMonthly;
   const rOpp = oppCagr/100/12;
+  const periods = buildRatePeriods();
+  const schedule = simulateAmortization(loan, tenure, periods);
 
   // BSD/ABSD/buyer's agent/legal never convert into equity and never come back - they're spent
   // the moment you buy. They're still part of the capital you committed, though, so both chart
@@ -574,41 +647,55 @@ function renderOppCost(){
   // the two lines start at different points for no visible reason.
   const sunkCost = up.total - up.downPayment;
 
+  const cfByYear = [...Array(horizon).keys()].map(t=>cashFlowForYear(t, schedule, rent, mcst, ins, agent, repair, vac, income));
+
   document.getElementById('oppCostBox').innerHTML = `
     <div class="stat"><div class="v">${fmtCur(up.total)}</div><div class="l">Total capital outlay (down payment + BSD + ABSD + agent + legal)</div></div>
     <div class="stat"><div class="v">${fmtCur(sunkCost)}</div><div class="l">Of which, one-time sunk costs (never recovered, don't compound)</div></div>
     <div class="stat"><div class="v">${growthPct.toFixed(2)}%</div><div class="l">Assumed property/district appreciation (CAGR)</div></div>
-    <div class="stat"><div class="v">${fmtCur(monthlyCF)}</div><div class="l">Monthly cash flow redirected either way (Year-1, held flat)</div></div>
+    <div class="stat"><div class="v">${fmtCur(cfByYear[0].monthlyCF)}</div><div class="l">Monthly cash flow, Year 1${state.rateMode==='chunked'?' (varies by rate period thereafter)':' (held flat across the horizon)'}</div></div>
   `;
   document.getElementById('growthSource').textContent = describeGrowth(LAST_GROWTH_INFO);
 
   const years = [...Array(horizon+1).keys()];
   const propTip = [], altTip = [];
-  // Property path = net equity (value minus remaining loan balance) + the frozen sunk-cost slice
-  // + any positive cash-flow surplus, assumed reinvested at the opportunity rate.
+  // Reinvest/redirect each year's actual surplus or shortfall, compounded from the point it
+  // occurred to year t - not a single lump sum, since the amount itself can change year to year
+  // once a rate reprice hits.
+  function cumulativeSurplusFV(t){
+    let fv=0;
+    for(let y=0;y<t;y++){ const cf=cfByYear[y].monthlyCF; if(cf>0){ fv += fvAnnuity(cf,12,rOpp)*Math.pow(1+rOpp,(t-(y+1))*12); } }
+    return fv;
+  }
+  function cumulativeShortfallFV(t){
+    let fv=0;
+    for(let y=0;y<t;y++){ const cf=cfByYear[y].monthlyCF; if(cf<0){ fv += fvAnnuity(-cf,12,rOpp)*Math.pow(1+rOpp,(t-(y+1))*12); } }
+    return fv;
+  }
+  // Property path = net equity (value minus remaining loan balance, from the actual rate-schedule
+  // simulation) + the frozen sunk-cost slice + cumulative reinvested cash-flow surplus.
   const equityPath = years.map(t=>{
-    const months = t*12;
+    const months = Math.min(t*12, schedule.length-1);
     const propVal = price*Math.pow(1+growthPct/100, t);
-    const bal = loanBalanceAt(loan, rate, tenure, c.mortM, months);
+    const bal = schedule[months].balance;
     const equity = propVal - bal;
     const pctOwned = propVal>0 ? equity/propVal*100 : 0;
-    const surplusFV = monthlyCF>0 ? fvAnnuity(monthlyCF, months, rOpp) : 0;
+    const surplusFV = cumulativeSurplusFV(t);
     const total = equity + sunkCost + surplusFV;
-    propTip.push(`Year ${t}\nProperty value: ${fmtCur(propVal)}\nLoan balance: ${fmtCur(bal)}\nEquity: ${fmtCur(equity)}  (${pctOwned.toFixed(1)}% owned)\n+ sunk transaction costs (frozen): ${fmtCur(sunkCost)}`
-      + (surplusFV>0 ? `\n+ reinvested cash-flow surplus: ${fmtCur(surplusFV)}` : '')
+    propTip.push(`Year ${t}\nProperty value: ${fmtCur(propVal)}\nLoan balance: ${fmtCur(bal)}  (rate: ${schedule[months].ratePct}%)\nEquity: ${fmtCur(equity)}  (${pctOwned.toFixed(1)}% owned)\n+ sunk transaction costs (frozen): ${fmtCur(sunkCost)}`
+      + (surplusFV>0 ? `\n+ reinvested cash-flow surplus (cumulative): ${fmtCur(surplusFV)}` : '')
       + `\nTotal: ${fmtCur(total)}`);
     return total;
   });
-  // Alternative path = total outlay invested at t=0, PLUS - if the property runs a monthly cash
-  // shortfall - that same shortfall redirected into the alternative investment each month instead
-  // (since in the "don't buy" world you'd never have had to find that cash to begin with).
+  // Alternative path = total outlay invested at t=0, PLUS every year's actual cash shortfall (if
+  // any) redirected into the alternative investment instead (since in the "don't buy" world you'd
+  // never have had to find that cash to begin with).
   const altPath = years.map(t=>{
-    const months = t*12;
     const base = up.total*Math.pow(1+oppCagr/100, t);
-    const redirectedFV = monthlyCF<0 ? fvAnnuity(-monthlyCF, months, rOpp) : 0;
+    const redirectedFV = cumulativeShortfallFV(t);
     const total = base + redirectedFV;
     altTip.push(`Year ${t}\nOutlay grown at ${oppCagr}%: ${fmtCur(base)}`
-      + (redirectedFV>0 ? `\n+ redirected monthly shortfalls: ${fmtCur(redirectedFV)}` : '')
+      + (redirectedFV>0 ? `\n+ redirected monthly shortfalls (cumulative): ${fmtCur(redirectedFV)}` : '')
       + `\nTotal: ${fmtCur(total)}`);
     return total;
   });
@@ -913,6 +1000,14 @@ function wireControls(){
       document.querySelectorAll('#chartMetricChips .chip').forEach(c=>c.classList.remove('active'));
       chip.classList.add('active'); state.chartMetric=chip.dataset.metric;
       renderChart();
+    };
+  });
+  document.getElementById('rateModeChips').querySelectorAll('.chip').forEach(chip=>{
+    chip.onclick=()=>{
+      document.querySelectorAll('#rateModeChips .chip').forEach(c=>c.classList.remove('active'));
+      chip.classList.add('active'); state.rateMode=chip.dataset.mode;
+      document.getElementById('rateChunkFields').style.display = state.rateMode==='chunked'?'flex':'none';
+      renderOppCost();
     };
   });
   document.getElementById('chartProjectSelect').onchange = e=>{

@@ -62,6 +62,20 @@ button.use:hover{background:var(--accent);color:#fff;}
 .legend-item{display:flex;align-items:center;gap:6px;}
 .legend-swatch{width:12px;height:12px;border-radius:3px;display:inline-block;}
 svg#trendChart{width:100%;height:auto;}
+.info-tip{position:relative;display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;
+  border-radius:50%;background:var(--panel2);border:1px solid var(--border);color:var(--muted);font-size:10px;
+  font-weight:700;font-style:normal;line-height:1;cursor:help;margin-left:6px;vertical-align:middle;user-select:none;}
+.info-tip:hover,.info-tip:focus{color:#fff;border-color:var(--accent);outline:none;}
+.info-tip .info-bubble{visibility:hidden;opacity:0;position:absolute;bottom:calc(100% + 8px);left:50%;
+  transform:translateX(-50%);background:#232b3d;border:1px solid var(--border);border-radius:8px;padding:9px 12px;
+  width:250px;color:var(--text);font-size:11.5px;font-weight:400;font-style:normal;line-height:1.5;text-align:left;
+  box-shadow:0 6px 18px rgba(0,0,0,0.45);z-index:80;transition:opacity .12s ease;pointer-events:none;white-space:normal;}
+.info-tip .info-bubble::after{content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);
+  border:6px solid transparent;border-top-color:#232b3d;}
+.info-tip:hover .info-bubble,.info-tip:focus .info-bubble{visibility:visible;opacity:1;}
+.info-tip.below .info-bubble{bottom:auto;top:calc(100% + 8px);}
+.info-tip.below .info-bubble::after{top:auto;bottom:100%;border-top-color:transparent;border-bottom-color:#232b3d;}
+h2 .info-tip{margin-left:8px;}
 </style>
 </head>
 <body>
@@ -83,7 +97,7 @@ svg#trendChart{width:100%;height:auto;}
       <li>Income tax on rental profit uses Singapore's actual progressive resident tax brackets (IRAS, YA2024 onwards), applied to the profit as the top slice stacked on the buyer's other chargeable income - not a flat guessed rate. See the calculator for the editable income assumption.</li>
       <li>Property tax uses the non-owner-occupied AV brackets (IRAS, effective 1 Jan 2024) applied to the property's full annual market rent, not the vacancy-discounted figure - IRAS assesses Annual Value from comparable market rentals regardless of the owner's actual vacancy.</li>
       <li>The calculator's "Upfront cash required" section includes Buyer's Stamp Duty (progressive 1-6% scale) and Additional Buyer's Stamp Duty (rate depends on buyer citizenship/PR status and existing property count) per current IRAS rates, plus optional buyer's-agent commission and legal/misc costs.</li>
-      <li>The "Opportunity cost of capital" chart compares that upfront cash against the property's own value, grown at a REAL historical appreciation rate computed from transacted PSF data for the specific project (falls back to the district if the project's own history is too thin) - not a leverage-adjusted equity comparison, since the property line tracks the full mostly-loan purchase price.</li>
+      <li>The "Opportunity cost of capital" chart is a leverage-adjusted comparison: the property line tracks NET EQUITY (value minus remaining mortgage balance, from a full month-by-month amortization) grown at a REAL historical appreciation rate computed from transacted PSF data for the specific project (falls back to the district if the project's own history is too thin), plus the frozen one-time transaction costs and any reinvested monthly cash surplus. The alternative line compounds the same total cash outlay at an assumed investment return, plus any monthly cash shortfalls redirected into it instead.</li>
     </ul>
   </div>
 
@@ -121,7 +135,7 @@ svg#trendChart{width:100%;height:auto;}
         </select>
       </div>
       <div class="col">
-        <label>Price/rent basis</label>
+        <label>Price/rent basis<span class="info-tip" tabindex="0">i<span class="info-bubble">"Median" takes the middle transaction value in each group — simple and robust to outliers. "Recency-weighted average" gives more recent transactions more weight (a half-life, e.g. 12mo, is how long until a transaction counts half as much), so the number tracks a moving market faster.</span></span></label>
         <div class="chip-row" id="weightChips">
           <span class="chip active" data-weight="median">Median (equal weight)</span>
           <span class="chip" data-weight="weighted">Recency-weighted average</span>
@@ -140,26 +154,26 @@ svg#trendChart{width:100%;height:auto;}
   </div>
 
   <div class="card">
-    <h2>Matched projects (has both sales &amp; rental data, same size band, current filters)</h2>
+    <h2>Matched projects (has both sales &amp; rental data, same size band, current filters)<span class="info-tip" tabindex="0">i<span class="info-bubble">A project only appears here if it has BOTH sale and rental transactions in the same district and size band within the current filters — that's what lets a real gross yield (rent ÷ price) be computed, instead of guessing.</span></span></h2>
     <div class="sub">Auto-matched by exact project name + size band within district. Click "Use" to load a row into the calculator below.</div>
     <div class="tablewrap"><table id="matchedTable"><thead></thead><tbody></tbody></table></div>
   </div>
 
   <div class="row">
     <div class="col card" style="flex:1.4;min-width:400px;">
-      <h2>Sales &mdash; aggregated by project &amp; size band</h2>
+      <h2>Sales &mdash; aggregated by project &amp; size band<span class="info-tip" tabindex="0">i<span class="info-bubble">Each row combines every matching sale transaction for that project + size band into one median (or recency-weighted average) price and PSF, so a single project isn't dominated by one unusually high or low sale.</span></span></h2>
       <div class="sub" id="salesSub"></div>
       <div class="tablewrap"><table id="salesTable"><thead></thead><tbody></tbody></table></div>
     </div>
     <div class="col card" style="flex:1.4;min-width:400px;">
-      <h2>Rentals &mdash; aggregated by project &amp; size band</h2>
+      <h2>Rentals &mdash; aggregated by project &amp; size band<span class="info-tip" tabindex="0">i<span class="info-bubble">Same idea as the sales table: every rental transaction for that project + size band + bedroom count is combined into one median (or recency-weighted average) monthly rent.</span></span></h2>
       <div class="sub" id="rentSub"></div>
       <div class="tablewrap"><table id="rentTable"><thead></thead><tbody></tbody></table></div>
     </div>
   </div>
 
   <div class="card">
-    <h2>Cash flow calculator</h2>
+    <h2>Cash flow calculator<span class="info-tip" tabindex="0">i<span class="info-bubble">Models the actual monthly cash in/out of owning and renting out this specific unit — mortgage payment, running costs, income tax on the profit — plus the one-time cash needed to complete the purchase (down payment + stamp duties + fees).</span></span></h2>
     <div class="sub">Type a price/rent directly, or click "Use" on a matched-project row above. Recalculates live.</div>
     <div class="row">
       <div class="col">
@@ -167,7 +181,7 @@ svg#trendChart{width:100%;height:auto;}
         <input type="number" id="cPrice" value="1650000" step="1000">
         <label>Monthly rent (S$)</label>
         <input type="number" id="cRent" value="4000" step="50">
-        <label>Loan-to-Value (LTV %)</label>
+        <label>Loan-to-Value (LTV %)<span class="info-tip" tabindex="0">i<span class="info-bubble">The loan as a percentage of the purchase price. 75% LTV on a $1,000,000 property means a $750,000 loan and a $250,000 cash down payment.</span></span></label>
         <input type="number" id="cLTV" value="75" step="1">
         <label>Mortgage rate (% p.a.)</label>
         <input type="number" id="cRate" value="1.75" step="0.05">
@@ -175,7 +189,7 @@ svg#trendChart{width:100%;height:auto;}
         <input type="number" id="cTenure" value="30" step="1">
       </div>
       <div class="col">
-        <label>MCST maintenance (S$/month)</label>
+        <label>MCST maintenance (S$/month)<span class="info-tip" tabindex="0">i<span class="info-bubble">MCST = Management Corporation Strata Title. This is the recurring monthly fee every condo unit owner pays for building upkeep, security, and shared facilities (pool, gym, etc.).</span></span></label>
         <input type="number" id="cMcst" value="500" step="10">
         <label>Insurance (S$/year)</label>
         <input type="number" id="cIns" value="300" step="10">
@@ -183,14 +197,14 @@ svg#trendChart{width:100%;height:auto;}
         <input type="number" id="cAgent" value="4.2" step="0.1">
         <label>Repairs &amp; misc reserve (% of annual rent)</label>
         <input type="number" id="cRepair" value="2" step="0.1">
-        <label>Vacancy (months/year)</label>
+        <label>Vacancy (months/year)<span class="info-tip" tabindex="0">i<span class="info-bubble">How many months a year you assume the unit sits empty between tenants. This reduces your actual rental income, but NOT the property tax basis — IRAS taxes based on the unit's market rental potential, not how many months it was actually occupied.</span></span></label>
         <input type="number" id="cVac" value="1" step="0.5">
-        <label>Buyer's other chargeable income (S$/year, before this rental)</label>
+        <label>Buyer's other chargeable income (S$/year, before this rental)<span class="info-tip" tabindex="0">i<span class="info-bubble">Your other taxable income (salary etc., net of personal reliefs). Singapore taxes rental profit as the TOP slice stacked on top of this, using progressive brackets — so this number determines your marginal tax rate on the rental profit.</span></span></label>
         <input type="number" id="cIncome" value="0" step="1000">
         <div class="small">Rental profit is taxed as the TOP slice of the buyer's income using Singapore's real progressive brackets (IRAS), not a flat guessed rate. Enter your own approximate chargeable income here (salary + other income, less SRS/CPF/other personal reliefs) for an accurate marginal rate - defaults to $0 (i.e. rental income taxed from the first dollar) until you do.</div>
       </div>
       <div class="col">
-        <label>Buyer's ABSD profile (this purchase)</label>
+        <label>Buyer's ABSD profile (this purchase)<span class="info-tip" tabindex="0">i<span class="info-bubble">ABSD = Additional Buyer's Stamp Duty. A flat percentage of the purchase price, charged on top of BSD, based on the buyer's own citizenship/PR status and how many residential properties are already in their name.</span></span></label>
         <select id="cAbsd">
           <option value="0" selected>Singapore Citizen — 1st property (0%)</option>
           <option value="5">Singapore PR — 1st property (5%)</option>
@@ -212,35 +226,62 @@ svg#trendChart{width:100%;height:auto;}
   </div>
 
   <div class="card">
-    <h2>Opportunity cost of capital</h2>
+    <h2>Opportunity cost of capital<span class="info-tip" tabindex="0">i<span class="info-bubble">Compares two homes for your cash: buying the property (tracked as net equity — value minus remaining mortgage balance) vs. investing that same cash elsewhere at an assumed return. This shows whether the leverage from the mortgage is actually worth it, net of what the cash could have earned on its own.</span></span></h2>
     <div class="sub">Leverage-adjusted comparison: the property line is NET EQUITY (property value at the district/project's real historical appreciation rate, minus the remaining mortgage balance) - not the full purchase price, since the loan isn't your capital. The alternative line is the total capital outlay invested elsewhere; if the property runs a monthly cash shortfall, that same cash is redirected into the alternative investment instead (since in the "don't buy" world you'd never have had to find it). Click "Use" on a matched-project row above to pull that project's real historical appreciation (falls back to the district if the project's own sale history is too thin); otherwise this defaults to a blended trend across all loaded sales.</div>
     <div class="summary-grid" id="oppCostBox"></div>
     <div class="row" style="margin-top:14px;">
       <div class="col">
-        <label>Assumed property/district appreciation (CAGR %/yr)</label>
+        <label>Assumed property/district appreciation (CAGR %/yr)<span class="info-tip" tabindex="0">i<span class="info-bubble">CAGR = Compound Annual Growth Rate — the steady yearly growth rate that would take the first observed price to the last observed price over the period, smoothing out quarter-to-quarter noise. Computed here from real transacted PSF data, not assumed.</span></span></label>
         <input type="number" id="cGrowth" value="0" step="0.1">
         <div class="small" id="growthSource"></div>
       </div>
       <div class="col">
-        <label>Opportunity-cost investment CAGR (%/yr)</label>
+        <label>Opportunity-cost investment CAGR (%/yr)<span class="info-tip" tabindex="0">i<span class="info-bubble">The assumed annual return on the alternative investment (e.g. a diversified stock/ETF portfolio) that your cash would go into instead of a property down payment.</span></span></label>
         <input type="number" id="cOppCagr" value="5" step="0.1">
         <label>Time horizon (years)</label>
         <input type="number" id="cHorizon" value="10" step="1">
+        <div class="small">Try 5, 10, 15, 20, 25, or 30 - any value works.</div>
+      </div>
+      <div class="col">
+        <label>Mortgage rate assumption for this chart</label>
+        <div class="chip-row" id="rateModeChips">
+          <span class="chip active" data-mode="flat">Single rate (uses the mortgage rate above)</span>
+          <span class="chip" data-mode="chunked">Rate changes over time</span>
+        </div>
+        <div class="row" id="rateChunkFields" style="display:none;margin-top:8px;">
+          <div class="col">
+            <label>Length of each fixed period (years)</label>
+            <input type="number" id="cRatePeriodYrs" value="3" step="1">
+          </div>
+          <div class="col">
+            <label>Years 1&ndash;N rate (%)</label>
+            <input type="number" id="cRateY1" value="1.75" step="0.05">
+          </div>
+          <div class="col">
+            <label>Years N+1&ndash;2N rate (%)</label>
+            <input type="number" id="cRateY2" value="1.75" step="0.05">
+          </div>
+          <div class="col">
+            <label>Years 2N+1 onward (%)</label>
+            <input type="number" id="cRateY3" value="1.75" step="0.05">
+          </div>
+        </div>
+        <div class="small">At each rate change, the monthly payment is recalculated to fully amortize the remaining balance over the remaining original loan term (same payoff date, new installment) - standard behavior for an SG mortgage that reprices without refinancing elsewhere.</div>
       </div>
     </div>
     <svg id="oppChart" viewBox="0 0 1080 380" preserveAspectRatio="xMidYMid meet" style="margin-top:14px;"></svg>
     <div class="legend-row" id="oppLegend"></div>
-    <div class="small" style="margin-top:8px;">Caveats: (1) the monthly cash flow used to redirect/reinvest is the Year-1 figure from the calculator above, held flat for the whole horizon - rent growth and expense inflation aren't projected year-by-year. (2) No exit costs are modeled (agent commission or Seller's Stamp Duty if sold within the holding period). (3) Only the down-payment slice of your outlay becomes equity - BSD/ABSD/agent/legal are sunk transaction costs and never appear as equity, which is why the two lines don't start at the same value at Year 0.</div>
+    <div class="small" style="margin-top:8px;">Hover any point on the chart for the exact breakdown (property value, loan balance, % owned, active rate, cumulative reinvested/redirected cash flow) at that year. Caveats: (1) rent, MCST, insurance, and expense percentages are held flat at today's levels for the whole horizon - only the mortgage rate/payment varies year to year (if "Rate changes over time" is selected); no rent growth or expense inflation is projected. (2) No exit costs are modeled (agent commission or Seller's Stamp Duty if sold within the holding period). (3) Only the down-payment slice of your outlay becomes equity - BSD/ABSD/agent/legal are sunk transaction costs that never grow, which is why the property line's early growth looks slower per dollar than the alternative line.</div>
   </div>
 
   <div class="card">
-    <h2>Breakeven LTV screen &mdash; matched projects</h2>
+    <h2>Breakeven LTV screen &mdash; matched projects<span class="info-tip" tabindex="0">i<span class="info-bubble">"Breakeven LTV" is the highest loan-to-value at which monthly cash flow (rent minus mortgage minus running costs minus tax) still stays at or above $0. A HIGHER breakeven LTV is better — it means the property can support a bigger, more typical loan (e.g. 75%) without running a monthly cash shortfall.</span></span></h2>
     <div class="sub">The loan-to-value at which monthly cash flow (rent minus mortgage P&amp;I minus opex minus tax) hits exactly $0, using the calculator's opex assumptions above. Green = achievable at 75% LTV or higher. Lower numbers mean you'd need a bigger cash down payment to reach net-zero.</div>
     <div class="tablewrap"><table id="breakevenTable"><thead></thead><tbody></tbody></table></div>
   </div>
 
   <div class="card">
-    <h2>Probability of breaking even</h2>
+    <h2>Probability of breaking even<span class="info-tip" tabindex="0">i<span class="info-bubble">Instead of using one median price and one median rent, this pairs EVERY real transacted price with EVERY real transacted rent for a group (full cross-product) and checks what share of those pairs would break even at the LTV you pick below — a rough sense of how consistent (vs. lucky) a matched pair's yield really is.</span></span></h2>
     <div class="sub">Uses EVERY actual transacted price paired with EVERY actual transacted rent for a district/project/size-band (full cross-product, not just the median pair). Reports what share of those clear $0 (literal breakeven) or &minus;$250/month (near-breakeven) at a given LTV.</div>
     <label>Loan-to-Value for this panel: <b id="probLtvLabel">75%</b></label>
     <input type="range" id="probLtv" min="20" max="100" value="75" step="5">
@@ -248,7 +289,7 @@ svg#trendChart{width:100%;height:auto;}
   </div>
 
   <div class="card">
-    <h2>Price trend</h2>
+    <h2>Price trend<span class="info-tip" tabindex="0">i<span class="info-bubble">PSF = price per square foot. Plots how the median sale and/or rental $/sqft moved quarter to quarter, so you can see whether a district or project is actually trending up, flat, or down — this is also where the appreciation CAGR used in the "Opportunity cost of capital" section comes from.</span></span></h2>
     <div class="sub">Median $ per sqft per quarter (sale PSF and/or rental $/sqft), from every transaction in the current size/tenure/date filters above. This chart has its own district filter below, independent of the table filters. Solid lines = sale $/sqft, dashed lines = rental $/sqft.</div>
     <div class="chip-row" id="chartModeChips">
       <span class="chip active" data-mode="district">By district</span>
