@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Singapore Rental Property Investment Calculator</title>
+<style>
+:root{
+  --bg:#0f1420; --panel:#171d2b; --panel2:#1e2534; --border:#2a3244;
+  --text:#e8ebf2; --muted:#8b93a7; --accent:#4f8cff; --good:#3ecf8e; --bad:#ff6b6b; --warn:#ffb84f;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;
+}
+*{box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);margin:0;padding:0;font-size:14px;}
+header{padding:20px 28px;border-bottom:1px solid var(--border);background:var(--panel);}
+header h1{margin:0 0 4px 0;font-size:20px;}
+header p{margin:0;color:var(--muted);font-size:13px;}
+.container{padding:20px 28px;max-width:1600px;margin:0 auto;}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:18px 20px;margin-bottom:20px;}
+.card h2{margin:0 0 4px 0;font-size:16px;}
+.card .sub{color:var(--muted);font-size:12.5px;margin-bottom:14px;}
+.row{display:flex;flex-wrap:wrap;gap:20px;}
+.col{flex:1;min-width:280px;}
+label{display:block;font-size:12px;color:var(--muted);margin-bottom:4px;margin-top:10px;}
+label:first-child{margin-top:0;}
+input[type=number],input[type=text],select{
+  width:100%;padding:7px 9px;background:var(--panel2);border:1px solid var(--border);
+  border-radius:6px;color:var(--text);font-size:13px;
+}
+select[multiple]{height:160px;}
+.chip-row{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px;}
+.chip{padding:5px 11px;border-radius:16px;border:1px solid var(--border);background:var(--panel2);
+  cursor:pointer;font-size:12.5px;color:var(--muted);user-select:none;}
+.chip.active{background:var(--accent);color:#fff;border-color:var(--accent);}
+table{width:100%;border-collapse:collapse;font-size:12.5px;}
+th,td{padding:7px 9px;border-bottom:1px solid var(--border);text-align:right;white-space:nowrap;}
+th:first-child,td:first-child,th:nth-child(2),td:nth-child(2){text-align:left;}
+th{color:var(--muted);font-weight:600;cursor:pointer;position:sticky;top:0;background:var(--panel);}
+th:hover{color:var(--text);}
+tbody tr:hover{background:var(--panel2);}
+.tablewrap{max-height:480px;overflow:auto;border:1px solid var(--border);border-radius:8px;}
+.good{color:var(--good);font-weight:600;}
+.bad{color:var(--bad);font-weight:600;}
+.warn{color:var(--warn);}
+a{color:var(--accent);text-decoration:none;}
+a:hover{text-decoration:underline;}
+button.use{padding:4px 10px;font-size:11.5px;border-radius:6px;border:1px solid var(--accent);background:transparent;color:var(--accent);cursor:pointer;}
+button.use:hover{background:var(--accent);color:#fff;}
+.summary-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;margin-top:6px;}
+.stat{background:var(--panel2);border:1px solid var(--border);border-radius:8px;padding:12px 14px;}
+.stat .v{font-size:20px;font-weight:700;}
+.stat .l{color:var(--muted);font-size:11.5px;margin-top:2px;}
+.notes ul{margin:6px 0;padding-left:20px;color:var(--muted);font-size:12.5px;line-height:1.6;}
+.notes li{margin-bottom:4px;}
+#calcOut{margin-top:14px;}
+.calcline{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px dashed var(--border);font-size:13px;}
+.calcline.total{font-weight:700;border-bottom:none;border-top:1px solid var(--border);margin-top:6px;padding-top:8px;}
+.small{font-size:11.5px;color:var(--muted);}
+#loadStatus{padding:40px 28px;color:var(--muted);font-size:14px;}
+#loadStatus code{background:var(--panel2);padding:2px 6px;border-radius:4px;}
+.legend-row{display:flex;flex-wrap:wrap;gap:14px;margin-top:8px;font-size:12px;color:var(--muted);}
+.legend-item{display:flex;align-items:center;gap:6px;}
+.legend-swatch{width:12px;height:12px;border-radius:3px;display:inline-block;}
+svg#trendChart{width:100%;height:auto;}
+</style>
+</head>
+<body>
+<header>
+  <h1>Singapore Rental Property Investment Calculator</h1>
+  <p>Loads <code>data/sales.json</code>, <code>data/rent.json</code> and <code>data/prob_data.json</code> at runtime &mdash; nothing is embedded in this page. <span id="nSales">&hellip;</span> sale rows and <span id="nRent">&hellip;</span> rental rows, filtered to 1&ndash;2BR-sized units (350&ndash;1000 sqft) across all 7 districts in the dataset. No web-research estimates anywhere &mdash; every figure is aggregated live from the loaded transaction rows.</p>
+</header>
+<div id="loadStatus"></div>
+<div class="container" id="app" style="display:none;">
+
+  <div class="card notes">
+    <h2>Data notes &amp; methodology</h2>
+    <ul>
+      <li>Matching is by <b>district + project + size band</b> (350&ndash;550 / 550&ndash;750 / 750&ndash;1000 sqft), not just project name &mdash; a project's sale price is only compared against rent for similarly-sized units. See <code>data/meta.json</code> for the full generation log.</li>
+      <li>Sales files have no bedroom count &mdash; size band is the 1&ndash;2BR proxy. Rental files have a real bedroom field, filtered to 1 or 2.</li>
+      <li>Project names link to a PropertyGuru search for that project (verified working search-query pattern, not a guessed listing URL).</li>
+      <li>The probability-of-breakeven panel is precomputed server-side (full cross-product of every real price &times; every real rent, last 24 months) because that's too heavy to redo per click; it now correctly respects the tenure toggle and is broken out by size band.</li>
+      <li>Year-1 mortgage interest is computed exactly via amortization, not the flat loan&times;rate approximation.</li>
+      <li>Income tax on rental profit uses Singapore's actual progressive resident tax brackets (IRAS, YA2024 onwards), applied to the profit as the top slice stacked on the buyer's other chargeable income - not a flat guessed rate. See the calculator for the editable income assumption.</li>
+      <li>Property tax uses the non-owner-occupied AV brackets (IRAS, effective 1 Jan 2024) applied to the property's full annual market rent, not the vacancy-discounted figure - IRAS assesses Annual Value from comparable market rentals regardless of the owner's actual vacancy.</li>
+      <li>The calculator's "Upfront cash required" section includes Buyer's Stamp Duty (progressive 1-6% scale) and Additional Buyer's Stamp Duty (rate depends on buyer citizenship/PR status and existing property count) per current IRAS rates, plus optional buyer's-agent commission and legal/misc costs.</li>
+      <li>The "Opportunity cost of capital" chart compares that upfront cash against the property's own value, grown at a REAL historical appreciation rate computed from transacted PSF data for the specific project (falls back to the district if the project's own history is too thin) - not a leverage-adjusted equity comparison, since the property line tracks the full mostly-loan purchase price.</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2>Filters</h2>
+    <div class="sub">Apply to every table &amp; the chart below.</div>
+    <div class="row">
+      <div class="col">
+        <label>Districts</label>
+        <div class="chip-row" id="districtChips"></div>
+      </div>
+      <div class="col">
+        <label>Tenure (sales only)</label>
+        <div class="chip-row" id="tenureChips">
+          <span class="chip active" data-tenure="all">All</span>
+          <span class="chip" data-tenure="freehold">Freehold only</span>
+          <span class="chip" data-tenure="leasehold">Leasehold only</span>
+        </div>
+        <label>Bedroom (rentals only)</label>
+        <div class="chip-row" id="bedChips">
+          <span class="chip active" data-bed="all">1 &amp; 2 BR</span>
+          <span class="chip" data-bed="1">1BR only</span>
+          <span class="chip" data-bed="2">2BR only</span>
+        </div>
+      </div>
+      <div class="col">
+        <label>Size range (sqft): <span id="sizeLabel">350&ndash;1000</span></label>
+        <input type="range" id="sizeMin" min="350" max="1000" value="350" step="10">
+        <input type="range" id="sizeMax" min="350" max="1000" value="1000" step="10">
+        <label>Date window</label>
+        <select id="dateWindow">
+          <option value="12">Last 12 months</option>
+          <option value="24" selected>Last 24 months</option>
+          <option value="999">All available (2021&ndash;2026)</option>
+        </select>
+      </div>
+      <div class="col">
+        <label>Price/rent basis</label>
+        <div class="chip-row" id="weightChips">
+          <span class="chip active" data-weight="median">Median (equal weight)</span>
+          <span class="chip" data-weight="weighted">Recency-weighted average</span>
+        </div>
+        <div id="halfLifeRow" style="display:none;">
+          <label>Recency half-life: <span id="halfLifeLabel">12mo</span> (a transaction this old counts half as much as one from today)</label>
+          <input type="range" id="halfLife" min="3" max="36" value="12" step="1">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Summary</h2>
+    <div class="summary-grid" id="summaryGrid"></div>
+  </div>
+
+  <div class="card">
+    <h2>Matched projects (has both sales &amp; rental data, same size band, current filters)</h2>
+    <div class="sub">Auto-matched by exact project name + size band within district. Click "Use" to load a row into the calculator below.</div>
+    <div class="tablewrap"><table id="matchedTable"><thead></thead><tbody></tbody></table></div>
+  </div>
+
+  <div class="row">
+    <div class="col card" style="flex:1.4;min-width:400px;">
+      <h2>Sales &mdash; aggregated by project &amp; size band</h2>
+      <div class="sub" id="salesSub"></div>
+      <div class="tablewrap"><table id="salesTable"><thead></thead><tbody></tbody></table></div>
+    </div>
+    <div class="col card" style="flex:1.4;min-width:400px;">
+      <h2>Rentals &mdash; aggregated by project &amp; size band</h2>
+      <div class="sub" id="rentSub"></div>
+      <div class="tablewrap"><table id="rentTable"><thead></thead><tbody></tbody></table></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Cash flow calculator</h2>
+    <div class="sub">Type a price/rent directly, or click "Use" on a matched-project row above. Recalculates live.</div>
+    <div class="row">
+      <div class="col">
+        <label>Purchase price (S$)</label>
+        <input type="number" id="cPrice" value="1650000" step="1000">
+        <label>Monthly rent (S$)</label>
+        <input type="number" id="cRent" value="4000" step="50">
+        <label>Loan-to-Value (LTV %)</label>
+        <input type="number" id="cLTV" value="75" step="1">
+        <label>Mortgage rate (% p.a.)</label>
+        <input type="number" id="cRate" value="1.75" step="0.05">
+        <label>Loan tenure (years)</label>
+        <input type="number" id="cTenure" value="30" step="1">
+      </div>
+      <div class="col">
+        <label>MCST maintenance (S$/month)</label>
+        <input type="number" id="cMcst" value="500" step="10">
+        <label>Insurance (S$/year)</label>
+        <input type="number" id="cIns" value="300" step="10">
+        <label>Leasing agent commission (% of annual rent, for finding tenants)</label>
+        <input type="number" id="cAgent" value="4.2" step="0.1">
+        <label>Repairs &amp; misc reserve (% of annual rent)</label>
+        <input type="number" id="cRepair" value="2" step="0.1">
+        <label>Vacancy (months/year)</label>
+        <input type="number" id="cVac" value="1" step="0.5">
+        <label>Buyer's other chargeable income (S$/year, before this rental)</label>
+        <input type="number" id="cIncome" value="0" step="1000">
+        <div class="small">Rental profit is taxed as the TOP slice of the buyer's income using Singapore's real progressive brackets (IRAS), not a flat guessed rate. Enter your own approximate chargeable income here (salary + other income, less SRS/CPF/other personal reliefs) for an accurate marginal rate - defaults to $0 (i.e. rental income taxed from the first dollar) until you do.</div>
+      </div>
+      <div class="col">
+        <label>Buyer's ABSD profile (this purchase)</label>
+        <select id="cAbsd">
+          <option value="0" selected>Singapore Citizen — 1st property (0%)</option>
+          <option value="5">Singapore PR — 1st property (5%)</option>
+          <option value="20">Singapore Citizen — 2nd property (20%)</option>
+          <option value="30">Singapore PR — 2nd property (30%)</option>
+          <option value="30">Singapore Citizen — 3rd+ property (30%)</option>
+          <option value="35">Singapore PR — 3rd+ property (35%)</option>
+          <option value="60">Foreigner (60%)</option>
+        </select>
+        <label>Buyer's own agent commission (% of price, one-time)</label>
+        <input type="number" id="cBuyerAgent" value="0" step="0.5">
+        <div class="small">In SG resale deals the seller pays the transaction agent - leave at 0% unless you're engaging an exclusive buyer's agent who charges you directly.</div>
+        <label>Legal &amp; misc costs (S$, one-time)</label>
+        <input type="number" id="cLegal" value="3000" step="100">
+        <div class="small">Buyer's Stamp Duty (BSD) is computed automatically below from the purchase price using IRAS's progressive BSD scale (1-6%). ABSD is a flat rate on the full price - pick the profile matching the buyer's own citizenship/PR status and existing property count.</div>
+      </div>
+      <div class="col" id="calcOut"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Opportunity cost of capital</h2>
+    <div class="sub">Leverage-adjusted comparison: the property line is NET EQUITY (property value at the district/project's real historical appreciation rate, minus the remaining mortgage balance) - not the full purchase price, since the loan isn't your capital. The alternative line is the total capital outlay invested elsewhere; if the property runs a monthly cash shortfall, that same cash is redirected into the alternative investment instead (since in the "don't buy" world you'd never have had to find it). Click "Use" on a matched-project row above to pull that project's real historical appreciation (falls back to the district if the project's own sale history is too thin); otherwise this defaults to a blended trend across all loaded sales.</div>
+    <div class="summary-grid" id="oppCostBox"></div>
+    <div class="row" style="margin-top:14px;">
+      <div class="col">
+        <label>Assumed property/district appreciation (CAGR %/yr)</label>
+        <input type="number" id="cGrowth" value="0" step="0.1">
+        <div class="small" id="growthSource"></div>
+      </div>
+      <div class="col">
+        <label>Opportunity-cost investment CAGR (%/yr)</label>
+        <input type="number" id="cOppCagr" value="5" step="0.1">
+        <label>Time horizon (years)</label>
+        <input type="number" id="cHorizon" value="10" step="1">
+      </div>
+    </div>
+    <svg id="oppChart" viewBox="0 0 1080 380" preserveAspectRatio="xMidYMid meet" style="margin-top:14px;"></svg>
+    <div class="legend-row" id="oppLegend"></div>
+    <div class="small" style="margin-top:8px;">Caveats: (1) the monthly cash flow used to redirect/reinvest is the Year-1 figure from the calculator above, held flat for the whole horizon - rent growth and expense inflation aren't projected year-by-year. (2) No exit costs are modeled (agent commission or Seller's Stamp Duty if sold within the holding period). (3) Only the down-payment slice of your outlay becomes equity - BSD/ABSD/agent/legal are sunk transaction costs and never appear as equity, which is why the two lines don't start at the same value at Year 0.</div>
+  </div>
+
+  <div class="card">
+    <h2>Breakeven LTV screen &mdash; matched projects</h2>
+    <div class="sub">The loan-to-value at which monthly cash flow (rent minus mortgage P&amp;I minus opex minus tax) hits exactly $0, using the calculator's opex assumptions above. Green = achievable at 75% LTV or higher. Lower numbers mean you'd need a bigger cash down payment to reach net-zero.</div>
+    <div class="tablewrap"><table id="breakevenTable"><thead></thead><tbody></tbody></table></div>
+  </div>
+
+  <div class="card">
+    <h2>Probability of breaking even</h2>
+    <div class="sub">Uses EVERY actual transacted price paired with EVERY actual transacted rent for a district/project/size-band (full cross-product, not just the median pair). Reports what share of those clear $0 (literal breakeven) or &minus;$250/month (near-breakeven) at a given LTV.</div>
+    <label>Loan-to-Value for this panel: <b id="probLtvLabel">75%</b></label>
+    <input type="range" id="probLtv" min="20" max="100" value="75" step="5">
+    <div class="tablewrap" style="margin-top:10px;"><table id="probTable"><thead></thead><tbody></tbody></table></div>
+  </div>
+
+  <div class="card">
+    <h2>Price trend</h2>
+    <div class="sub">Median $ per sqft per quarter (sale PSF and/or rental $/sqft), from every transaction in the current size/tenure/date filters above. This chart has its own district filter below, independent of the table filters. Solid lines = sale $/sqft, dashed lines = rental $/sqft.</div>
+    <div class="chip-row" id="chartModeChips">
+      <span class="chip active" data-mode="district">By district</span>
+      <span class="chip" data-mode="project">By project</span>
+    </div>
+    <div class="chip-row" id="chartMetricChips">
+      <span class="chip" data-metric="sale">Sale $/sqft</span>
+      <span class="chip" data-metric="rent">Rental $/sqft</span>
+      <span class="chip active" data-metric="both">Both</span>
+    </div>
+    <div id="chartDistrictPicker" style="margin-bottom:10px;">
+      <label>Districts shown on chart</label>
+      <div class="chip-row" id="chartDistrictChips"></div>
+    </div>
+    <div id="chartProjectPicker" style="display:none;margin-bottom:10px;">
+      <label>Select projects to chart (ctrl/cmd-click for multiple)</label>
+      <select id="chartProjectSelect" multiple></select>
+    </div>
+    <svg id="trendChart" viewBox="0 0 1080 380" preserveAspectRatio="xMidYMid meet"></svg>
+    <div class="legend-row" id="chartLegend"></div>
+  </div>
+
+</div>
+<script src="app.js"></script>
+</body>
+</html>

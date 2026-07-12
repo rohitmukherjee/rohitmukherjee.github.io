@@ -1,0 +1,33 @@
+{
+  "generated": "2026-07-12T12:55:23.956395",
+  "source": "data",
+  "sales_rows": 17164,
+  "rent_rows": 74697,
+  "size_filter": [
+    350,
+    1000
+  ],
+  "probability_panel_lookback_months": 24,
+  "probability_panel_reference_date": "2026-07-01",
+  "districts_found": [
+    "D01",
+    "D02",
+    "D03",
+    "D04",
+    "D09",
+    "D10",
+    "D15"
+  ],
+  "corrupted_files_this_run": [],
+  "assumptions": {
+    "rate_pct": 1.7500000000000002,
+    "tenure_yrs": 30,
+    "mcst_month": 500,
+    "insurance_yr": 300,
+    "agent_pct": 4.2,
+    "repair_pct": 2.0,
+    "vacancy_months": 1,
+    "income_tax_method": "progressive resident brackets (IRAS, YA2024 onwards), marginal on top of base_income",
+    "base_income": 0
+  }
+}
