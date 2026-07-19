@@ -2,3 +2,13 @@
 node_modules/
 __pycache__/
 *.pyc
+
+# Python: uv-managed environments (uv sync recreates from pyproject.toml + uv.lock).
+# Do NOT ignore uv.lock itself; that's the reproducibility contract and belongs in the repo.
+.venv/
+venv/
+.ipynb_checkpoints/
+*.egg-info/
+dist/
+build/
+.DS_Store

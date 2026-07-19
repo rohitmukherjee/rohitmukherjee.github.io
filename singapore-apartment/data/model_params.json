@@ -1,0 +1,657 @@
+{
+ "fit_level": "district",
+ "fit_level_reason": "auto: fell back to district level - band cell D04-B has 14 real quarters (30% interpolated); needs >= 40 real and <= 15% interp",
+ "segments": {
+  "D01": {
+   "n_quarters": 20,
+   "date_range": [
+    "2021-Q3",
+    "2026-Q2"
+   ],
+   "interpolated_quarters": 0,
+   "correlation": {
+    "price_rent_return_corr": -0.2187,
+    "ci95": [
+     -0.6121,
+     0.2615
+    ],
+    "n": 19
+   },
+   "cointegration": {
+    "engle_granger": {
+     "stat": -0.4121,
+     "pvalue": 0.97,
+     "lag": 1,
+     "critical_values": {
+      "1%": -4.566,
+      "5%": -3.677,
+      "10%": -3.275
+     }
+    },
+    "johansen": {
+     "trace_stat": [
+      11.323,
+      0.445
+     ],
+     "trace_crit_5pct": [
+      15.494,
+      3.841
+     ],
+     "rank": 0
+    },
+    "cointegrated_at_5pct": false
+   },
+   "vecm": {
+    "fitted": false,
+    "lag_order": 1,
+    "error_correction": {
+     "alpha_price": 0.0167,
+     "alpha_price_se": 0.0212,
+     "alpha_rent": -0.0177,
+     "alpha_rent_se": 0.0045,
+     "beta": [
+      1.0,
+      14.1275
+     ],
+     "current_gap": 0.5692
+    },
+    "lead_lag": {
+     "rent_leads_price": false,
+     "granger_pvalue": 0.5175
+    }
+   },
+   "ou_yield": {
+    "long_run_yield": 0.03731,
+    "long_run_yield_se": 0.00411,
+    "lambda_": 1.3947,
+    "lambda_se": 0.9463,
+    "sigma": 0.01241,
+    "half_life_years": 0.497,
+    "ar1_b": 0.7056,
+    "ar1_b_se": 0.1669,
+    "mean_reverting": true,
+    "resid_sd": 0.005267
+   },
+   "structural_breaks": {
+    "method": "Quandt-Andrews supF (single break)",
+    "tested": true,
+    "supF": 12.213,
+    "crit_5pct": 8.85,
+    "break_quarter_index": 13,
+    "significant_at_5pct": true,
+    "breaks_detected": [
+     13
+    ],
+    "note": "Long-run yield is regime-dependent; a detected break means the pre-break sample should not be pooled into the long-run mean. Multiple-break Bai-Perron needs longer history."
+   },
+   "regime": "full_sample",
+   "data_adequacy": {
+    "flag": "low_confidence",
+    "reason": "20 quarterly obs (single market regime)",
+    "n_quarters": 20,
+    "min_recommended_quarters": 40
+   },
+   "segment": "D01",
+   "district": "D01",
+   "band": null
+  },
+  "D02": {
+   "n_quarters": 20,
+   "date_range": [
+    "2021-Q3",
+    "2026-Q2"
+   ],
+   "interpolated_quarters": 0,
+   "correlation": {
+    "price_rent_return_corr": 0.2363,
+    "ci95": [
+     -0.2441,
+     0.6236
+    ],
+    "n": 19
+   },
+   "cointegration": {
+    "engle_granger": {
+     "stat": -3.1951,
+     "pvalue": 0.0707,
+     "lag": 1,
+     "critical_values": {
+      "1%": -4.566,
+      "5%": -3.677,
+      "10%": -3.275
+     }
+    },
+    "johansen": {
+     "trace_stat": [
+      16.136,
+      6.575
+     ],
+     "trace_crit_5pct": [
+      15.494,
+      3.841
+     ],
+     "rank": 2
+    },
+    "cointegrated_at_5pct": true
+   },
+   "vecm": {
+    "fitted": true,
+    "lag_order": 1,
+    "error_correction": {
+     "alpha_price": -1.7956,
+     "alpha_price_se": 0.5128,
+     "alpha_rent": -0.3051,
+     "alpha_rent_se": 0.2303,
+     "beta": [
+      1.0,
+      -0.3925
+     ],
+     "current_gap": 0.0087
+    },
+    "lead_lag": {
+     "rent_leads_price": true,
+     "granger_pvalue": 0.0296
+    }
+   },
+   "ou_yield": {
+    "long_run_yield": 0.0365,
+    "long_run_yield_se": 0.00081,
+    "lambda_": 9.2212,
+    "lambda_se": 8.8633,
+    "sigma": 0.01372,
+    "half_life_years": 0.075,
+    "ar1_b": 0.0997,
+    "ar1_b_se": 0.221,
+    "mean_reverting": true,
+    "resid_sd": 0.003179
+   },
+   "structural_breaks": {
+    "method": "Quandt-Andrews supF (single break)",
+    "tested": true,
+    "supF": 9.182,
+    "crit_5pct": 8.85,
+    "break_quarter_index": 5,
+    "significant_at_5pct": true,
+    "breaks_detected": [
+     5
+    ],
+    "note": "Long-run yield is regime-dependent; a detected break means the pre-break sample should not be pooled into the long-run mean. Multiple-break Bai-Perron needs longer history."
+   },
+   "regime": "full_sample",
+   "data_adequacy": {
+    "flag": "low_confidence",
+    "reason": "20 quarterly obs (single market regime)",
+    "n_quarters": 20,
+    "min_recommended_quarters": 40
+   },
+   "segment": "D02",
+   "district": "D02",
+   "band": null
+  },
+  "D03": {
+   "n_quarters": 20,
+   "date_range": [
+    "2021-Q3",
+    "2026-Q2"
+   ],
+   "interpolated_quarters": 0,
+   "correlation": {
+    "price_rent_return_corr": -0.0315,
+    "ci95": [
+     -0.4788,
+     0.4289
+    ],
+    "n": 19
+   },
+   "cointegration": {
+    "engle_granger": {
+     "stat": -2.635,
+     "pvalue": 0.2238,
+     "lag": 1,
+     "critical_values": {
+      "1%": -4.566,
+      "5%": -3.677,
+      "10%": -3.275
+     }
+    },
+    "johansen": {
+     "trace_stat": [
+      21.585,
+      6.6
+     ],
+     "trace_crit_5pct": [
+      15.494,
+      3.841
+     ],
+     "rank": 2
+    },
+    "cointegrated_at_5pct": true
+   },
+   "vecm": {
+    "fitted": true,
+    "lag_order": 1,
+    "error_correction": {
+     "alpha_price": -0.0259,
+     "alpha_price_se": 0.0712,
+     "alpha_rent": 0.0834,
+     "alpha_rent_se": 0.0173,
+     "beta": [
+      1.0,
+      -2.4848
+     ],
+     "current_gap": -0.1345
+    },
+    "lead_lag": {
+     "rent_leads_price": false,
+     "granger_pvalue": 0.9584
+    }
+   },
+   "ou_yield": {
+    "long_run_yield": 0.03606,
+    "long_run_yield_se": 0.00229,
+    "lambda_": 1.3918,
+    "lambda_se": 0.8272,
+    "sigma": 0.00655,
+    "half_life_years": 0.498,
+    "ar1_b": 0.7061,
+    "ar1_b_se": 0.146,
+    "mean_reverting": true,
+    "resid_sd": 0.002779
+   },
+   "structural_breaks": {
+    "method": "Quandt-Andrews supF (single break)",
+    "tested": true,
+    "supF": 23.264,
+    "crit_5pct": 8.85,
+    "break_quarter_index": 4,
+    "significant_at_5pct": true,
+    "breaks_detected": [
+     4
+    ],
+    "note": "Long-run yield is regime-dependent; a detected break means the pre-break sample should not be pooled into the long-run mean. Multiple-break Bai-Perron needs longer history."
+   },
+   "regime": "full_sample",
+   "data_adequacy": {
+    "flag": "low_confidence",
+    "reason": "20 quarterly obs (single market regime)",
+    "n_quarters": 20,
+    "min_recommended_quarters": 40
+   },
+   "segment": "D03",
+   "district": "D03",
+   "band": null
+  },
+  "D04": {
+   "n_quarters": 20,
+   "date_range": [
+    "2021-Q3",
+    "2026-Q2"
+   ],
+   "interpolated_quarters": 0,
+   "correlation": {
+    "price_rent_return_corr": 0.0091,
+    "ci95": [
+     -0.447,
+     0.4614
+    ],
+    "n": 19
+   },
+   "cointegration": {
+    "engle_granger": {
+     "stat": -0.8069,
+     "pvalue": 0.9338,
+     "lag": 1,
+     "critical_values": {
+      "1%": -4.566,
+      "5%": -3.677,
+      "10%": -3.275
+     }
+    },
+    "johansen": {
+     "trace_stat": [
+      8.635,
+      0.673
+     ],
+     "trace_crit_5pct": [
+      15.494,
+      3.841
+     ],
+     "rank": 0
+    },
+    "cointegrated_at_5pct": false
+   },
+   "vecm": {
+    "fitted": false,
+    "lag_order": 1,
+    "error_correction": {
+     "alpha_price": 0.0046,
+     "alpha_price_se": 0.0027,
+     "alpha_rent": 0.0079,
+     "alpha_rent_se": 0.0025,
+     "beta": [
+      1.0,
+      -24.4184
+     ],
+     "current_gap": -1.2798
+    },
+    "lead_lag": {
+     "rent_leads_price": false,
+     "granger_pvalue": 0.3379
+    }
+   },
+   "ou_yield": {
+    "long_run_yield": 0.03574,
+    "long_run_yield_se": 0.00238,
+    "lambda_": 0.9808,
+    "lambda_se": 0.7241,
+    "sigma": 0.00506,
+    "half_life_years": 0.707,
+    "ar1_b": 0.7826,
+    "ar1_b_se": 0.1417,
+    "mean_reverting": true,
+    "resid_sd": 0.002247
+   },
+   "structural_breaks": {
+    "method": "Quandt-Andrews supF (single break)",
+    "tested": true,
+    "supF": 5.539,
+    "crit_5pct": 8.85,
+    "break_quarter_index": 4,
+    "significant_at_5pct": false,
+    "breaks_detected": [],
+    "note": "Long-run yield is regime-dependent; a detected break means the pre-break sample should not be pooled into the long-run mean. Multiple-break Bai-Perron needs longer history."
+   },
+   "regime": "full_sample",
+   "data_adequacy": {
+    "flag": "low_confidence",
+    "reason": "20 quarterly obs (single market regime)",
+    "n_quarters": 20,
+    "min_recommended_quarters": 40
+   },
+   "segment": "D04",
+   "district": "D04",
+   "band": null
+  },
+  "D09": {
+   "n_quarters": 20,
+   "date_range": [
+    "2021-Q3",
+    "2026-Q2"
+   ],
+   "interpolated_quarters": 0,
+   "correlation": {
+    "price_rent_return_corr": 0.0177,
+    "ci95": [
+     -0.44,
+     0.4682
+    ],
+    "n": 19
+   },
+   "cointegration": {
+    "engle_granger": {
+     "stat": -1.6854,
+     "pvalue": 0.6835,
+     "lag": 1,
+     "critical_values": {
+      "1%": -4.566,
+      "5%": -3.677,
+      "10%": -3.275
+     }
+    },
+    "johansen": {
+     "trace_stat": [
+      12.681,
+      3.259
+     ],
+     "trace_crit_5pct": [
+      15.494,
+      3.841
+     ],
+     "rank": 0
+    },
+    "cointegrated_at_5pct": false
+   },
+   "vecm": {
+    "fitted": false,
+    "lag_order": 1,
+    "error_correction": {
+     "alpha_price": -0.0026,
+     "alpha_price_se": 0.0584,
+     "alpha_rent": 0.0481,
+     "alpha_rent_se": 0.0132,
+     "beta": [
+      1.0,
+      -4.3591
+     ],
+     "current_gap": -0.3772
+    },
+    "lead_lag": {
+     "rent_leads_price": false,
+     "granger_pvalue": 0.9922
+    }
+   },
+   "ou_yield": {
+    "long_run_yield": 0.03103,
+    "long_run_yield_se": 0.00155,
+    "lambda_": 2.6771,
+    "lambda_se": 1.5082,
+    "sigma": 0.00852,
+    "half_life_years": 0.259,
+    "ar1_b": 0.5121,
+    "ar1_b_se": 0.1931,
+    "mean_reverting": true,
+    "resid_sd": 0.003163
+   },
+   "structural_breaks": {
+    "method": "Quandt-Andrews supF (single break)",
+    "tested": true,
+    "supF": 19.928,
+    "crit_5pct": 8.85,
+    "break_quarter_index": 5,
+    "significant_at_5pct": true,
+    "breaks_detected": [
+     5
+    ],
+    "note": "Long-run yield is regime-dependent; a detected break means the pre-break sample should not be pooled into the long-run mean. Multiple-break Bai-Perron needs longer history."
+   },
+   "regime": "full_sample",
+   "data_adequacy": {
+    "flag": "low_confidence",
+    "reason": "20 quarterly obs (single market regime)",
+    "n_quarters": 20,
+    "min_recommended_quarters": 40
+   },
+   "segment": "D09",
+   "district": "D09",
+   "band": null
+  },
+  "D10": {
+   "n_quarters": 20,
+   "date_range": [
+    "2021-Q3",
+    "2026-Q2"
+   ],
+   "interpolated_quarters": 0,
+   "correlation": {
+    "price_rent_return_corr": -0.0945,
+    "ci95": [
+     -0.5261,
+     0.3759
+    ],
+    "n": 19
+   },
+   "cointegration": {
+    "engle_granger": {
+     "stat": -4.2377,
+     "pvalue": 0.0032,
+     "lag": 1,
+     "critical_values": {
+      "1%": -4.566,
+      "5%": -3.677,
+      "10%": -3.275
+     }
+    },
+    "johansen": {
+     "trace_stat": [
+      23.522,
+      9.894
+     ],
+     "trace_crit_5pct": [
+      15.494,
+      3.841
+     ],
+     "rank": 2
+    },
+    "cointegrated_at_5pct": true
+   },
+   "vecm": {
+    "fitted": true,
+    "lag_order": 1,
+    "error_correction": {
+     "alpha_price": -1.2978,
+     "alpha_price_se": 0.3131,
+     "alpha_rent": 0.0766,
+     "alpha_rent_se": 0.0925,
+     "beta": [
+      1.0,
+      -0.1365
+     ],
+     "current_gap": -0.1835
+    },
+    "lead_lag": {
+     "rent_leads_price": false,
+     "granger_pvalue": 0.6032
+    }
+   },
+   "ou_yield": {
+    "long_run_yield": 0.02875,
+    "long_run_yield_se": 0.00265,
+    "lambda_": 1.6177,
+    "lambda_se": 1.1747,
+    "sigma": 0.00823,
+    "half_life_years": 0.428,
+    "ar1_b": 0.6674,
+    "ar1_b_se": 0.196,
+    "mean_reverting": true,
+    "resid_sd": 0.003407
+   },
+   "structural_breaks": {
+    "method": "Quandt-Andrews supF (single break)",
+    "tested": true,
+    "supF": 18.369,
+    "crit_5pct": 8.85,
+    "break_quarter_index": 6,
+    "significant_at_5pct": true,
+    "breaks_detected": [
+     6
+    ],
+    "note": "Long-run yield is regime-dependent; a detected break means the pre-break sample should not be pooled into the long-run mean. Multiple-break Bai-Perron needs longer history."
+   },
+   "regime": "full_sample",
+   "data_adequacy": {
+    "flag": "low_confidence",
+    "reason": "20 quarterly obs (single market regime)",
+    "n_quarters": 20,
+    "min_recommended_quarters": 40
+   },
+   "segment": "D10",
+   "district": "D10",
+   "band": null
+  },
+  "D15": {
+   "n_quarters": 20,
+   "date_range": [
+    "2021-Q3",
+    "2026-Q2"
+   ],
+   "interpolated_quarters": 0,
+   "correlation": {
+    "price_rent_return_corr": -0.0724,
+    "ci95": [
+     -0.5099,
+     0.3948
+    ],
+    "n": 19
+   },
+   "cointegration": {
+    "engle_granger": {
+     "stat": -3.3832,
+     "pvalue": 0.0443,
+     "lag": 1,
+     "critical_values": {
+      "1%": -4.566,
+      "5%": -3.677,
+      "10%": -3.275
+     }
+    },
+    "johansen": {
+     "trace_stat": [
+      24.804,
+      8.939
+     ],
+     "trace_crit_5pct": [
+      15.494,
+      3.841
+     ],
+     "rank": 2
+    },
+    "cointegrated_at_5pct": true
+   },
+   "vecm": {
+    "fitted": true,
+    "lag_order": 1,
+    "error_correction": {
+     "alpha_price": -0.851,
+     "alpha_price_se": 0.3067,
+     "alpha_rent": -0.1521,
+     "alpha_rent_se": 0.0742,
+     "beta": [
+      1.0,
+      -0.301
+     ],
+     "current_gap": 0.0499
+    },
+    "lead_lag": {
+     "rent_leads_price": true,
+     "granger_pvalue": 0.0079
+    }
+   },
+   "ou_yield": {
+    "long_run_yield": 0.03042,
+    "long_run_yield_se": 0.00105,
+    "lambda_": 8.0509,
+    "lambda_se": 7.1556,
+    "sigma": 0.01601,
+    "half_life_years": 0.086,
+    "ar1_b": 0.1336,
+    "ar1_b_se": 0.239,
+    "mean_reverting": true,
+    "resid_sd": 0.003954
+   },
+   "structural_breaks": {
+    "method": "Quandt-Andrews supF (single break)",
+    "tested": true,
+    "supF": 2.484,
+    "crit_5pct": 8.85,
+    "break_quarter_index": 7,
+    "significant_at_5pct": false,
+    "breaks_detected": [],
+    "note": "Long-run yield is regime-dependent; a detected break means the pre-break sample should not be pooled into the long-run mean. Multiple-break Bai-Perron needs longer history."
+   },
+   "regime": "full_sample",
+   "data_adequacy": {
+    "flag": "low_confidence",
+    "reason": "20 quarterly obs (single market regime)",
+    "n_quarters": 20,
+    "min_recommended_quarters": 40
+   },
+   "segment": "D15",
+   "district": "D15",
+   "band": null
+  }
+ },
+ "global_data_adequacy": {
+  "flag": "low_confidence",
+  "reason": "20-20 quarterly obs per segment; all below 40 - cointegration/VECM/OU are provisional, not robust"
+ }
+}

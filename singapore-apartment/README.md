@@ -1,82 +1,162 @@
 # Singapore Rental Property Investment Calculator
 
-Self-contained static SPA (`index.html` + `app.js`) that loads `data/*.json` at runtime via
-`fetch()`. Nothing is embedded in the JS/HTML — the data files are the source of truth.
+A static, self-contained web app for analyzing 1 to 2 bedroom condo investments in Singapore,
+plus an offline notebook that fits a stochastic price-rent model over the same transaction data.
 
-## Viewing locally
+The app runs entirely in the browser. It loads precomputed JSON from `data/` at runtime and
+performs deterministic cash-flow arithmetic (amortization, stamp duties, progressive income tax)
+on the client. All statistical modeling happens offline in the notebook, never in the browser.
 
-Opening `index.html` directly (`file://`) will **not** work — browsers block `fetch()` of local
-files without a server. Run:
+## Overview
 
-```
-cd singapore-apartment
-python3 -m http.server 8000
-```
+The project has two independent parts that share one `data/` folder:
 
-then open `http://localhost:8000`.
+| Part | Files | Role |
+| --- | --- | --- |
+| Website | `index.html`, `app.js` | Live cash-flow calculator, yield tables, break-even screens, trend charts. Deterministic arithmetic only. |
+| App data builder | `build_data.py` | Aggregates raw URA-style CSVs into `sales.json`, `rent.json`, `prob_data.json`, `meta.json`. |
+| Model notebook | `sg_price_rent_model.ipynb` | Fits the price-rent econometric model and runs the Monte-Carlo grid. Writes `series.json`, `model_params.json`, `mc_grid.json`, `model_meta.json`. |
 
-## Publishing
+Each JSON artifact is independently shippable. The website degrades gracefully: if the model
+artifacts are absent, the calculator still works and the stochastic-model card stays hidden.
 
-Once pushed to this repo, GitHub Pages serves it over HTTPS at
-`https://rohitmukherjee.github.io/singapore-apartment/` and `fetch('data/...')` works normally
-(no server setup needed). This repo's root `index.html` (your main site) is untouched.
+## Data artifacts
 
-## Regenerating the data
+| File | Produced by | Contents |
+| --- | --- | --- |
+| `sales.json` | `build_data.py` | `[district, project, tenure, sqft, psf, price, "YYYY-MM"]` per sale. |
+| `rent.json` | `build_data.py` | `[district, project, bed, sqft, rent, "YYYY-MM"]` per lease. |
+| `prob_data.json` | `build_data.py` | Break-even probabilities at 17 LTV checkpoints, per district/project/size band/tenure. |
+| `meta.json` | `build_data.py` | Generation stamp and cash-flow assumptions for the probability panel. |
+| `series.json` | notebook | Quarterly sale-PSF and rental-PSF medians per district and size band. |
+| `model_params.json` | notebook | Fitted price-rent econometrics per segment, each with an uncertainty flag. |
+| `mc_grid.json` | notebook | Monte-Carlo terminal-wealth summaries (buy vs ETF) and break-even appreciation, on an interpolable grid. |
+| `model_meta.json` | notebook | Model provenance: data range, model specs, MC seed and path count, grid axes. |
 
-`build_data.py` rebuilds `data/sales.json`, `data/rent.json`, `data/prob_data.json`, and
-`data/meta.json` from raw URA-style CSVs:
+## Before you begin
 
-```
-python3 build_data.py --source /path/to/sg-rental-apartment-analysis/data
-```
+The notebook depends on pandas, numpy, statsmodels, scipy, and Jupyter. Dependencies
+are declared in `pyproject.toml` and pinned in `uv.lock`. This project uses
+[uv](https://docs.astral.sh/uv/) to manage the environment.
 
-It auto-discovers every `*.csv` under `<source>/sales/` and `<source>/rental/` — district is
-read from each row's `Postal District` column, not the filename. Drop a new CSV (any filename)
-into either folder and re-run; new districts appear automatically, in the app too (district
-chips are built from whatever's actually in the loaded data, not a hardcoded list).
+1.  Install uv, if you do not have it:
 
-This only works automatically if new CSVs have the same column headers as the existing ones
-(standard URA caveat / rental-contract export format — see the docstring at the top of
-`build_data.py`). A schema mismatch raises a `KeyError` naming the missing column; it will not
-silently guess.
+    ```
+    pip install uv
+    ```
 
-A file that's empty or fails to parse is skipped with a printed warning and listed in
-`meta.json`'s `corrupted_files_this_run` — never silently dropped, never estimated.
+2.  Create the environment and install the locked dependencies:
+
+    ```
+    cd singapore-apartment
+    uv sync
+    ```
+
+    This reads `pyproject.toml` and `uv.lock`, creates `.venv/`, and installs everything.
+    Rerun `uv sync` whenever `uv.lock` changes.
+
+## View the website locally
+
+Opening `index.html` from the filesystem does not work, because browsers block `fetch()` of
+local files. Serve the folder over HTTP:
+
+1.  Start a local server:
+
+    ```
+    cd singapore-apartment
+    python3 -m http.server 8000
+    ```
+
+2.  Open `http://localhost:8000`.
+
+Once pushed to this repository, GitHub Pages serves the app over HTTPS at
+`https://rohitmukherjee.github.io/singapore-apartment/`, and `fetch('data/...')` works with no
+server setup.
+
+## Regenerate the app data
+
+`build_data.py` rebuilds `sales.json`, `rent.json`, `prob_data.json`, and `meta.json` from raw
+URA-style CSVs.
+
+1.  Run the builder against a source folder that contains `sales/` and `rental/` subfolders:
+
+    ```
+    python3 build_data.py --source /path/to/realis-export/data
+    ```
+
+The builder auto-discovers every `*.csv` under `<source>/sales/` and `<source>/rental/`. District
+is read from each row's `Postal District` column, not the filename, so a new district appears
+automatically in the app the moment its rows are present. A file that is empty or fails to parse
+is skipped with a warning and listed in `meta.json`, never silently dropped and never estimated.
+
+New CSVs must use the same column headers as the existing files (the standard URA and
+rental-contract export format documented at the top of `build_data.py`). A schema mismatch raises
+a `KeyError` naming the missing column.
+
+## Regenerate the model
+
+`sg_price_rent_model.ipynb` fits the econometric model and runs the Monte-Carlo grid, then writes
+the four model artifacts into `data/`.
+
+1.  Open the notebook and edit the configuration cell if needed. The common settings are:
+
+    | Setting | Purpose |
+    | --- | --- |
+    | `HISTORICAL_SALES_SOURCE`, `HISTORICAL_RENT_SOURCE` | Input paths. Today they point at `data/sales.json` and `data/rent.json`. Point them at a longer REALIS export when you have one. |
+    | `SOURCE_KIND` | `"app_json"` for the current array-of-arrays files, or `"realis_csv"` for the future long export (adapter stub included). |
+    | `DATE_RANGE` | `None` for all history, or a `("2006-Q1", "2026-Q2")` window. |
+    | `FIT_LEVEL` | `"auto"` picks the finest level the data supports. Today it resolves to `district`; with roughly 40 or more quarters per band it upgrades to `district_band` on its own. |
+
+2.  Run the whole notebook from a clean state (Kernel, then Restart & Run All). It is designed to
+    run top to bottom without manual intervention.
+
+    To run it headless from the command line:
+
+    ```
+    uv run jupyter nbconvert --to notebook --execute --inplace sg_price_rent_model.ipynb
+    ```
+
+3.  Confirm the four artifacts were rewritten in `data/` and reload the website.
+
+### Data limitation
+
+The current dataset covers roughly 5 years (about 20 quarters, a single market regime). The
+cointegration, VECM, and OU estimates are therefore statistically weak. The notebook computes and
+stores them anyway, so the pipeline is ready for a longer history, and flags every fitted block as
+`low_confidence`. The website labels these outputs as provisional and gates the load-bearing
+readouts on the fitted flag. When you drop in a longer series and re-run, the flags clear on their
+own, structural-break detection becomes meaningful, and the fit level can upgrade to per-band.
+
+Compare successive `model_params.json` and `model_meta.json` across data refreshes to catch
+parameter instability.
 
 ## Methodology notes
 
-- Sales rows have no bedroom count; size (350–1000 sqft, split into three bands: A 350–550 ~1BR,
-  B 550–750 ~1.5BR, C 750–1000 ~2BR) is the proxy. Rental rows have a real bedroom field.
-- Matching for yield/cash-flow analysis is by **district + project + size band**, not just
-  project name — a project's sale price is only compared against rent for similarly-sized units.
-- The "probability of breaking even" panel is precomputed in `build_data.py` (full cross-product
-  of every real transacted price × every real transacted rent for a group, at 17 LTV checkpoints
-  from 20–100%, for each of ALL/freehold/leasehold tenure) because that's too heavy to redo
-  per-click in-browser at full population size. The app interpolates between checkpoints.
-- Year-1 mortgage interest is computed exactly via amortization (not the flat `loan × rate`
-  approximation, which overstates it by ~1.2% at 1.75%/30yr).
-- Income tax on rental profit uses Singapore's actual progressive resident brackets (IRAS, YA2024
-  onwards, unchanged through YA2026), applied to the profit as the TOP slice stacked on the buyer's
-  other chargeable income (`baseIncome`/`BASE_INCOME`) — not a flat guessed rate. Defaults to $0
-  (no assumption about the buyer's other income); editable per-scenario in the calculator
-  (`cIncome`), fixed in `build_data.py` for the precomputed probability panel (re-run to change).
-- Property tax uses the non-owner-occupied residential AV brackets (12%/20%/28%/36% at
-  $30k/$45k/$60k, IRAS, effective 1 Jan 2024, unchanged through 2026) applied to the property's
-  FULL annual market rent (not vacancy-discounted) — IRAS assesses Annual Value from comparable
-  market rentals regardless of the owner's actual vacancy.
-- The calculator's "Upfront cash required" section computes Buyer's Stamp Duty (progressive 1–6%
-  scale, effective 15-Feb-2023) and Additional Buyer's Stamp Duty (flat rate depending on buyer
-  citizenship/PR status and existing property count, effective 27-Apr-2023) per current IRAS
-  rates, plus optional buyer's-agent commission (0% by default — the seller normally pays the
-  transaction agent in SG resale deals) and legal/misc costs.
-- The "Opportunity cost of capital" section compares the total capital outlay (down payment + BSD
-  + ABSD + agent + legal) compounding at an assumed investment CAGR against the property's own
-  value compounding at a REAL historical appreciation rate computed from transacted PSF data for
-  that specific project (falling back to the district if the project's own sale history has fewer
-  than 8 transactions). This is not a leverage-adjusted equity comparison — the property line
-  tracks the full (mostly-loan) purchase price, not net equity after the mortgage balance.
-- Cash-flow assumptions are set in both `build_data.py` (server-side, baked into `prob_data.json`)
-  and the in-page calculator (client-side, live-editable): 1.75% p.a., 30yr, $500/mo MCST, $300/yr
-  insurance, 4.2% agent commission, 2% repairs reserve, 1 month/yr vacancy. Only the
-  calculator/breakeven tables respond to changes in these — the probability panel is fixed to the
-  values baked in at generation time (re-run `build_data.py` to change them there).
+- Sales rows have no bedroom count, so size is the 1 to 2 bedroom proxy: band A is 350 to 550 sqft
+  (about 1BR), band B is 550 to 750 sqft (about 1.5BR), band C is 750 to 1000 sqft (about 2BR).
+  Rental rows carry a real bedroom field.
+- Yield and cash-flow matching is by district, project, and size band, not project name alone, so a
+  project's sale price is only compared against rent for similarly sized units.
+- Year-1 mortgage interest is computed exactly through amortization, not a flat `loan x rate`
+  approximation.
+- Income tax on rental profit uses Singapore's progressive resident brackets (IRAS, YA2024
+  onwards), applied to the profit as the top slice on the buyer's other chargeable income.
+- Property tax uses the non-owner-occupied AV brackets (IRAS, effective 1 Jan 2024) on the full
+  annual market rent, since IRAS assesses Annual Value from comparable rentals regardless of actual
+  vacancy.
+- The Monte-Carlo terminal wealth is after tax, after exit costs (selling agent commission and
+  Seller's Stamp Duty when inside the holding window), and inflation adjusted (real). Rent and
+  expenses grow rather than staying frozen while value compounds. The opportunity-cost and
+  appreciation-drift assumptions are user set, because the data does not pin them down.
+
+## Project layout
+
+```
+singapore-apartment/
+  index.html                 Website markup and styles
+  app.js                     Website logic (deterministic, reads data/*.json)
+  build_data.py              App data builder (CSV to sales/rent/prob/meta JSON)
+  sg_price_rent_model.ipynb  Model notebook (fits model, writes model artifacts)
+  data/                      All JSON artifacts
+  README.md                  This file
+```

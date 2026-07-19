@@ -163,6 +163,16 @@ function bsd(price){
 // Current rates (IRAS, effective 27-Apr-2023, current through 2026): SC 1st 0%/2nd 20%/3rd+ 30%;
 // SPR 1st 5%/2nd 30%/3rd+ 35%; Foreigner 60%.
 function absd(price, ratePct){ return price*(ratePct/100); }
+// Seller's Stamp Duty schedule (IRAS, residential, current rates): 12% if sold <1yr,
+// 8% <2yr, 4% <3yr, 0% thereafter. Applied to the sale price at exit. Kept in sync with
+// the offline MC model (model_core.py ssd_rate).
+function ssdRate(holdYears){
+  if(holdYears<1) return 0.12;
+  if(holdYears<2) return 0.08;
+  if(holdYears<3) return 0.04;
+  return 0;
+}
+const SELL_AGENT_PCT_UI = 0.02;   // seller's marketing agent commission (SG norm ~2%)
 
 function calcCashFlow(price, rent, ltvPct, ratePct, tenureYrs, mcstMo, insYr, agentPct, repairPct, vacMo, baseIncome){
   const ltv=ltvPct/100, agent=agentPct/100, repair=repairPct/100;
@@ -471,6 +481,17 @@ function renderCalc(){
   const c = calcCashFlow(price,rent,ltv,rate,tenure,mcst,ins,agent,repair,vac,income);
   const be = breakevenLTV(price,rent,rate,tenure,mcst,ins,agent,repair,vac,income);
   const up = upfrontCosts(price, ltv, absdPct, buyerAgentPct, legal);
+  // Exit-cost block: use the horizon + appreciation from the opportunity-cost card as the
+  // "what would I net if I sold at year H?" assumption. These live below in the DOM but their
+  // defaults (10yr / 0%) are read before the user touches anything.
+  const horizonYrs = Math.max(1, Math.round(+document.getElementById('cHorizon').value || 10));
+  const growthPct = +document.getElementById('cGrowth').value || 0;
+  const propValAtH = price*Math.pow(1+growthPct/100, horizonYrs);
+  const balAtH = loanBalanceAt(c.loan, rate, tenure, c.mortM, horizonYrs*12);
+  const sellComm = SELL_AGENT_PCT_UI*propValAtH;
+  const ssdRateH = ssdRate(horizonYrs);
+  const ssdAmt = ssdRateH*propValAtH;
+  const netProceeds = propValAtH - balAtH - sellComm - ssdAmt;
   const out = document.getElementById('calcOut');
   out.innerHTML = `
     <div class="calcline"><span>Gross yield</span><span>${fmtPct(c.grossYield)}</span></div>
@@ -485,6 +506,13 @@ function renderCalc(){
     <div class="calcline total"><span>"True economic" cash flow (excl. principal)</span><span class="${c.trueEconMonthly>=0?'good':'bad'}">${fmtCur(c.trueEconMonthly)}</span></div>
     <div class="calcline total"><span>Breakeven LTV (literal $0 cash flow)</span><span class="${be!=null&&be>=0.75?'good':'warn'}">${be==null?'not achievable':(be*100).toFixed(1)+'%'}</span></div>
     <div class="small" style="margin-top:8px;">"Net cash flow after tax" is what actually leaves your bank account each month. "True economic" cash flow adds back the mortgage principal portion, since that money converts into home equity rather than being spent. Year-1 interest is computed exactly via amortization. Income tax uses Singapore's real progressive resident brackets (IRAS, YA2024 onwards) applied to the rental profit as the TOP slice of the buyer's income, not a flat guessed rate.</div>
+    <div class="calcline total" style="margin-top:14px;border-top:1px solid var(--border);padding-top:10px;"><span>Exit costs at year ${horizonYrs} (if sold)${infoTip("What actually reaches your bank on sale after the mortgage payoff, the seller's marketing agent commission (typically ~2% of sale price in Singapore), and Seller's Stamp Duty if you exit inside the 3-year SSD window (12% <1yr, 8% <2yr, 4% <3yr, 0% after). Uses the horizon and appreciation you set in the opportunity-cost section below.")}</span><span></span></div>
+    <div class="calcline"><span>Estimated property value at year ${horizonYrs} (${growthPct.toFixed(2)}% CAGR)</span><span>${fmtCur(propValAtH)}</span></div>
+    <div class="calcline"><span>Remaining mortgage balance at year ${horizonYrs}</span><span>&minus;${fmtCur(balAtH)}</span></div>
+    <div class="calcline"><span>Selling agent commission (${(SELL_AGENT_PCT_UI*100).toFixed(1)}% of sale price)</span><span>&minus;${fmtCur(sellComm)}</span></div>
+    <div class="calcline"><span>Seller's Stamp Duty (${(ssdRateH*100).toFixed(0)}% at ${horizonYrs}yr hold)${infoTip("IRAS SSD: 12% within 1yr of purchase, 8% <2yr, 4% <3yr, 0% thereafter. Applied to the sale price at exit.")}</span><span>&minus;${fmtCur(ssdAmt)}</span></div>
+    <div class="calcline total"><span>Net proceeds from sale</span><span class="${netProceeds>=up.total?'good':'warn'}">${fmtCur(netProceeds)}</span></div>
+    <div class="small" style="margin-top:8px;">Deterministic arithmetic: your original outlay was ${fmtCur(up.total)}. Ignoring the monthly cash flow and the money's time value, the property side of the trade nets ${netProceeds>=up.total?'a gain of ':'a loss of '}${fmtCur(Math.abs(netProceeds-up.total))} in nominal dollars at ${horizonYrs}yr / ${growthPct.toFixed(2)}% CAGR. See the "Opportunity cost of capital" chart below for the full comparison with your alternative investment (which factors in monthly cash flows and compounding).</div>
     <div class="calcline total" style="margin-top:14px;border-top:1px solid var(--border);padding-top:10px;"><span>Upfront cash required at purchase</span><span></span></div>
     <div class="calcline"><span>Down payment (${(100-ltv).toFixed(1)}% of price)</span><span>${fmtCur(up.downPayment)}</span></div>
     <div class="calcline"><span>Buyer's Stamp Duty (BSD, progressive scale)${infoTip("A tax on the purchase price paid by every property buyer in Singapore, regardless of citizenship. Progressive scale from 1% to 6% depending on price tier, per IRAS.")}</span><span>${fmtCur(up.bsd)}</span></div>
@@ -673,16 +701,24 @@ function renderOppCost(){
     return fv;
   }
   // Property path = net equity (value minus remaining loan balance, from the actual rate-schedule
-  // simulation) + the frozen sunk-cost slice + cumulative reinvested cash-flow surplus.
+  // simulation) minus exit costs realized if sold at year t (2% marketing agent commission + SSD
+  // if inside the 3-year window) + the frozen sunk-cost slice + cumulative reinvested cash-flow
+  // surplus. At t=0 no exit costs apply - you just bought, no sale realized.
   const equityPath = years.map(t=>{
     const months = Math.min(t*12, schedule.length-1);
     const propVal = price*Math.pow(1+growthPct/100, t);
     const bal = schedule[months].balance;
     const equity = propVal - bal;
     const pctOwned = propVal>0 ? equity/propVal*100 : 0;
+    const sellComm = t>0 ? SELL_AGENT_PCT_UI*propVal : 0;
+    const ssdR = t>0 ? ssdRate(t) : 0;
+    const ssdAmt = ssdR*propVal;
     const surplusFV = cumulativeSurplusFV(t);
-    const total = equity + sunkCost + surplusFV;
-    propTip.push(`Year ${t}\nProperty value: ${fmtCur(propVal)}\nLoan balance: ${fmtCur(bal)}  (rate: ${schedule[months].ratePct}%)\nEquity: ${fmtCur(equity)}  (${pctOwned.toFixed(1)}% owned)\n+ sunk transaction costs (frozen): ${fmtCur(sunkCost)}`
+    const total = equity - sellComm - ssdAmt + sunkCost + surplusFV;
+    propTip.push(`Year ${t}\nProperty value: ${fmtCur(propVal)}\nLoan balance: ${fmtCur(bal)}  (rate: ${schedule[months].ratePct}%)\nEquity: ${fmtCur(equity)}  (${pctOwned.toFixed(1)}% owned)`
+      + (sellComm>0 ? `\n- selling agent commission (${(SELL_AGENT_PCT_UI*100).toFixed(1)}%): ${fmtCur(sellComm)}` : '')
+      + (ssdAmt>0  ? `\n- Seller's Stamp Duty (${(ssdR*100).toFixed(0)}%, inside ${Math.ceil(3)}yr window): ${fmtCur(ssdAmt)}` : '')
+      + `\n+ sunk transaction costs (frozen): ${fmtCur(sunkCost)}`
       + (surplusFV>0 ? `\n+ reinvested cash-flow surplus (cumulative): ${fmtCur(surplusFV)}` : '')
       + `\nTotal: ${fmtCur(total)}`);
     return total;
@@ -702,7 +738,7 @@ function renderOppCost(){
 
   drawOppChart(years, [
     {label:'Capital invested elsewhere (+ redirected shortfalls)', color:'#3ecf8e', dash:'6,4', values:altPath, tooltips:altTip},
-    {label:'Property path (equity + sunk costs, + reinvested surplus)', color:'#4f8cff', dash:'none', values:equityPath, tooltips:propTip},
+    {label:'Property path (net equity after 2% sell commission + SSD when applicable, + sunk costs, + reinvested surplus)', color:'#4f8cff', dash:'none', values:equityPath, tooltips:propTip},
   ], [
     {value: up.total, label:'Start (both paths)', color:'#8b93a7'},
     {value: equityPath[equityPath.length-1], label:'Property, final', color:'#4f8cff'},
@@ -970,8 +1006,8 @@ function wireControls(){
   };
   document.getElementById('dateWindow').onchange=e=>{ state.dateWindow=+e.target.value; render(); };
   document.querySelectorAll('input[id^=c], select[id^=c]').forEach(inp=>{
-    inp.oninput=()=>{ renderCalc(); render(); renderOppCost(); };
-    inp.onchange=()=>{ renderCalc(); render(); renderOppCost(); };
+    inp.oninput=()=>{ renderCalc(); render(); renderOppCost(); renderModelCard(); };
+    inp.onchange=()=>{ renderCalc(); render(); renderOppCost(); renderModelCard(); };
   });
   document.getElementById('probLtv').oninput = renderProb;
 
@@ -1016,6 +1052,189 @@ function wireControls(){
   };
 }
 
+// ============================================================================
+// STOCHASTIC PRICE-RENT MODEL (provisional) - reads precomputed artifacts only.
+// ZERO statistics in the browser: this loads series.json / model_params.json /
+// mc_grid.json / model_meta.json and interpolates the grid. All fitting is done
+// offline in sg_price_rent_model.ipynb. Loads non-fatally: if the artifacts are
+// absent (e.g. not yet regenerated), the card stays hidden and the rest of the
+// app is unaffected.
+// ============================================================================
+let SERIES=null, MODEL_PARAMS=null, MC_GRID=null, MODEL_META=null, MODEL_OK=false;
+let MC_INDEX=null, BE_INDEX=null;
+
+async function loadModelArtifacts(){
+  try{
+    const [series, params, grid, meta] = await Promise.all([
+      fetch('data/series.json').then(r=>r.ok?r.json():null).catch(()=>null),
+      fetch('data/model_params.json').then(r=>r.ok?r.json():null).catch(()=>null),
+      fetch('data/mc_grid.json').then(r=>r.ok?r.json():null).catch(()=>null),
+      fetch('data/model_meta.json').then(r=>r.ok?r.json():null).catch(()=>null),
+    ]);
+    if(series && params && grid && meta){
+      SERIES=series; MODEL_PARAMS=params; MC_GRID=grid; MODEL_META=meta;
+      buildMcIndex();
+      MODEL_OK=true;
+    }
+  }catch(e){ MODEL_OK=false; }
+}
+
+const mcKey6=(d,b,h,l,dr,e)=>`${d}|${b}|${h}|${l}|${dr}|${e}`;
+const mcKey5=(d,b,h,l,e)=>`${d}|${b}|${h}|${l}|${e}`;
+function buildMcIndex(){
+  MC_INDEX=new Map(); BE_INDEX=new Map();
+  for(const c of MC_GRID.cells)
+    MC_INDEX.set(mcKey6(c.district,c.entry_yield_bucket,c.horizon_years,c.ltv_pct,c.appreciation_drift_pct,c.etf_return_pct), c);
+  for(const b of MC_GRID.breakeven)
+    BE_INDEX.set(mcKey5(b.district,b.entry_yield_bucket,b.horizon_years,b.ltv_pct,b.etf_return_pct), b);
+}
+
+// Bracketing grid indices + weights for a query value on one sorted axis (clamped at the ends).
+function lerpAxis(vals, q){
+  if(q<=vals[0]) return [[0,1]];
+  if(q>=vals[vals.length-1]) return [[vals.length-1,1]];
+  for(let i=0;i<vals.length-1;i++){
+    if(q>=vals[i] && q<=vals[i+1]){
+      const t=(q-vals[i])/(vals[i+1]-vals[i]);
+      if(t===0) return [[i,1]]; if(t===1) return [[i+1,1]];
+      return [[i,1-t],[i+1,t]];
+    }
+  }
+  return [[vals.length-1,1]];
+}
+
+// Nearest entry-yield bucket for a district, from the stored bucket edges.
+function bucketForYield(district, y){
+  const edges=MC_GRID.entry_yield_bucket_edges[district];
+  if(!edges) return 'mid';
+  if(y<=edges.low[1]) return 'low';
+  if(y<=edges.mid[1]) return 'mid';
+  return 'high';
+}
+
+// Multilinear interpolation of a grid cell over the 4 continuous axes (horizon, LTV,
+// drift, ETF); district + entry-yield bucket are exact. Mirrors prob_data.json's LTV
+// interpolation pattern, generalised to 4 dimensions.
+function interpMc(district, bucket, h, ltv, drift, etf){
+  const ax=MC_GRID.axes;
+  const hw=lerpAxis(ax.horizon_years,h), lw=lerpAxis(ax.ltv_pct,ltv),
+        dw=lerpAxis(ax.appreciation_drift_pct,drift), ew=lerpAxis(ax.etf_return_pct,etf);
+  const acc={buy:{},etf:{}, prob:0, ref_price:0, outlay:0}; let wsum=0;
+  const PS=['p10','p25','median','p75','p90'];
+  for(const [hi,wh] of hw) for(const [li,wl] of lw) for(const [di,wd] of dw) for(const [ei,we] of ew){
+    const w=wh*wl*wd*we; if(w===0) continue;
+    const cell=MC_INDEX.get(mcKey6(district,bucket,ax.horizon_years[hi],ax.ltv_pct[li],ax.appreciation_drift_pct[di],ax.etf_return_pct[ei]));
+    if(!cell) continue;
+    wsum+=w;
+    for(const p of PS){ acc.buy[p]=(acc.buy[p]||0)+w*cell.buy_terminal_wealth_real[p];
+                        acc.etf[p]=(acc.etf[p]||0)+w*cell.etf_terminal_wealth_real[p]; }
+    acc.prob+=w*cell.prob_buy_beats_etf; acc.ref_price+=w*cell.ref_price; acc.outlay+=w*cell.outlay;
+  }
+  if(wsum===0) return null;
+  for(const p of PS){ acc.buy[p]/=wsum; acc.etf[p]/=wsum; }
+  acc.prob/=wsum; acc.ref_price/=wsum; acc.outlay/=wsum;
+  return acc;
+}
+function interpBreakeven(district, bucket, h, ltv, etf){
+  const ax=MC_GRID.axes;
+  const hw=lerpAxis(ax.horizon_years,h), lw=lerpAxis(ax.ltv_pct,ltv), ew=lerpAxis(ax.etf_return_pct,etf);
+  let acc=0, wsum=0, sawNull=false;
+  for(const [hi,wh] of hw) for(const [li,wl] of lw) for(const [ei,we] of ew){
+    const w=wh*wl*we; if(w===0) continue;
+    const b=BE_INDEX.get(mcKey5(district,bucket,ax.horizon_years[hi],ax.ltv_pct[li],ax.etf_return_pct[ei]));
+    if(!b) continue;
+    if(b.breakeven_appreciation_cagr_pct==null){ sawNull=true; continue; }
+    acc+=w*b.breakeven_appreciation_cagr_pct; wsum+=w;
+  }
+  return wsum>0 ? {value:acc/wsum, partial:sawNull} : {value:null, partial:sawNull};
+}
+
+function renderModelCard(){
+  if(!MODEL_OK) return;
+  const card=document.getElementById('modelCard');
+  if(card) card.style.display='block';
+  // populate district selector once
+  const sel=document.getElementById('mcDistrict');
+  if(sel && !sel.dataset.filled){
+    sel.innerHTML=MC_GRID.axes.district.map(d=>`<option value="${d}">${d}${DISTRICT_NAMES[d]?(' — '+DISTRICT_NAMES[d]):''}</option>`).join('');
+    sel.dataset.filled='1';
+    if(LAST_GROWTH_INFO && LAST_GROWTH_INFO.district && MC_GRID.axes.district.includes(LAST_GROWTH_INFO.district))
+      sel.value=LAST_GROWTH_INFO.district;
+  }
+  const district=(sel&&sel.value)||MC_GRID.axes.district[0];
+  const price=+document.getElementById('cPrice').value, rent=+document.getElementById('cRent').value,
+        ltv=+document.getElementById('cLTV').value, horizon=+document.getElementById('cHorizon').value,
+        drift=+document.getElementById('cGrowth').value, etf=+document.getElementById('cOppCagr').value;
+  const entryYield = price>0 ? rent*12/price : null;
+  const bucket = entryYield!=null ? bucketForYield(district, entryYield) : 'mid';
+
+  const seg = MODEL_PARAMS.segments[district] ||
+    MODEL_PARAMS.segments[Object.keys(MODEL_PARAMS.segments).find(k=>k.startsWith(district))||''];
+  const globalFlag = MODEL_PARAMS.global_data_adequacy.flag;
+  const provisional = globalFlag!=='ok';
+
+  const banner = document.getElementById('mcBanner');
+  banner.className = 'model-banner ' + (provisional?'prov':'ok');
+  banner.innerHTML = provisional
+    ? `<b>Provisional / low-confidence.</b> ${escapeXml(MODEL_PARAMS.global_data_adequacy.reason)}. `
+      + `These outputs are shown for completeness and will firm up when a longer history is loaded. `
+      + `Data span: ${MODEL_META.source.date_range[0]}&ndash;${MODEL_META.source.date_range[1]} (${MODEL_META.source.n_quarters} quarters, seed ${MODEL_META.monte_carlo.seed}, ${MODEL_META.monte_carlo.n_paths.toLocaleString()} paths).`
+    : `<b>Model fitted.</b> ${escapeXml(MODEL_PARAMS.global_data_adequacy.reason)}`;
+
+  // ---- valuation gauge + fitted econometrics (labeled by confidence) ----
+  const gaugeEl=document.getElementById('mcGauge');
+  if(seg){
+    const co=seg.cointegration.cointegrated_at_5pct, ec=seg.vecm.error_correction||{};
+    const ou=seg.ou_yield, corr=seg.correlation;
+    const brk=seg.structural_breaks;
+    const gapTxt = (ec.current_gap!=null)
+      ? `${ec.current_gap>0?'+':''}${ec.current_gap.toFixed(3)} (${ec.current_gap>0?'price above':'price below'} the rent-implied level)`
+      : '&mdash;';
+    gaugeEl.innerHTML = `
+      <div class="stat"><div class="v ${co?'good':'warn'}">${co?'Yes':'Not established'}</div>
+        <div class="l">Price-rent cointegration at 5%${infoTip('Whether a stable long-run price-to-rent relationship is statistically established. On ~20 quarters of one regime this is expected to be Not established; the VECM gap below is then indicative only.')}</div></div>
+      <div class="stat"><div class="v">${gapTxt}</div>
+        <div class="l">VECM valuation gap${co?'':' (indicative, not established)'}${infoTip('The error-correction term: how far the current price sits from the level rent would justify, in log points. Positive = price looks stretched vs rent. Meaningful only once cointegration is established.')}</div></div>
+      <div class="stat"><div class="v">${(ou.long_run_yield*100).toFixed(2)}%<span class="se"> &plusmn;${ou.long_run_yield_se!=null?(ou.long_run_yield_se*100).toFixed(2):'?'}</span></div>
+        <div class="l">OU long-run gross yield (half-life ${ou.half_life_years}y)${infoTip('The yield the mean-reverting model pulls toward, with its standard error. Your entry yield above vs this shows whether you are buying cheap or rich to the long-run. Regime-dependent: not eternal.')}</div></div>
+      <div class="stat"><div class="v">${corr.price_rent_return_corr!=null?corr.price_rent_return_corr.toFixed(2):'&mdash;'}<span class="se"> ${corr.ci95?`[${corr.ci95[0].toFixed(2)}, ${corr.ci95[1].toFixed(2)}]`:''}</span></div>
+        <div class="l">Price-rent return correlation (95% CI)${infoTip('Quarterly co-movement of price and rent growth, with a 95% confidence interval. A very wide interval spanning zero means the short sample cannot pin this down.')}</div></div>`;
+    document.getElementById('mcBreakNote').innerHTML = brk && brk.breaks_detected && brk.breaks_detected.length
+      ? `<span class="warn">Structural break flagged</span> in the ${district} yield series (${brk.method}). The long-run yield is regime-dependent; pre-break history should not be pooled once longer data is available.`
+      : `No structural break detected in the ${district} yield series so far (${brk?brk.method:'n/a'}); with only ${seg.n_quarters} quarters this test has low power.`;
+  } else {
+    gaugeEl.innerHTML=''; document.getElementById('mcBreakNote').textContent='';
+  }
+
+  // ---- Monte-Carlo terminal wealth + break-even ----
+  const mc=interpMc(district, bucket, horizon, ltv, drift, etf);
+  const be=interpBreakeven(district, bucket, horizon, ltv, etf);
+  const outEl=document.getElementById('mcResult');
+  if(!mc){ outEl.innerHTML='<div class="small">No grid coverage for this selection.</div>'; return; }
+  const beTxt = be.value==null ? 'no crossover in range' : `${be.value.toFixed(2)}% / yr`;
+  const beCls = (be.value!=null && drift>=be.value) ? 'good' : 'warn';
+  outEl.innerHTML = `
+    <div class="summary-grid">
+      <div class="stat" style="border-color:${beCls==='good'?'var(--good)':'var(--warn)'}">
+        <div class="v ${beCls}">${beTxt}</div>
+        <div class="l">Break-even appreciation${infoTip('The appreciation CAGR at which buying and the ETF finish equal (median path), at your LTV, horizon, entry yield and ETF return. Above it, buying wins on the median path; below it, the ETF wins. This is the headline the data speaks to most robustly.')}</div></div>
+      <div class="stat"><div class="v ${mc.prob>=0.5?'good':'bad'}">${(mc.prob*100).toFixed(0)}%</div>
+        <div class="l">P(buying beats ETF) at ${drift.toFixed(1)}% appreciation${infoTip('Share of simulated paths on which the property terminal wealth exceeds the ETF, at your chosen appreciation drift.')}</div></div>
+      <div class="stat"><div class="v">${fmtCur(mc.buy.median)}</div>
+        <div class="l">Buy: median real terminal wealth<br><span class="small">P10&ndash;P90 ${fmtCur(mc.buy.p10)} to ${fmtCur(mc.buy.p90)}</span></div></div>
+      <div class="stat"><div class="v">${fmtCur(mc.etf.median)}</div>
+        <div class="l">ETF: median real terminal wealth<br><span class="small">P10&ndash;P90 ${fmtCur(mc.etf.p10)} to ${fmtCur(mc.etf.p90)}</span></div></div>
+    </div>
+    <div class="small" style="margin-top:8px;">
+      District <b>${district}</b>, entry-yield bucket <b>${bucket}</b> (your entry yield ${entryYield!=null?(entryYield*100).toFixed(2)+'%':'n/a'}),
+      ${horizon}-year horizon, ${ltv}% LTV, ${etf.toFixed(1)}% ETF return. Terminal wealth is after-tax, after exit costs
+      (2% selling commission + SSD if within the holding window), inflation-adjusted (real), computed at the district reference
+      price of ${fmtCur(mc.ref_price)} (outlay ${fmtCur(mc.outlay)}); scale by your own price for a rough dollar figure.
+      ${be.partial?'<br><span class="warn">Some grid corners had no crossover in range; break-even is interpolated from those that did.</span>':''}
+      Values interpolated between precomputed grid points; the browser runs no simulation.
+    </div>`;
+}
+
 // ---------------- boot ----------------
 async function boot(){
   const statusEl = document.getElementById('loadStatus');
@@ -1036,10 +1255,14 @@ async function boot(){
     wireControls();
     LAST_GROWTH_INFO = computeGrowthRate(null, null);
     if(LAST_GROWTH_INFO) document.getElementById('cGrowth').value = (LAST_GROWTH_INFO.cagr*100).toFixed(2);
+    await loadModelArtifacts();   // non-fatal: card stays hidden if artifacts are absent
+    const mcSel = document.getElementById('mcDistrict');
+    if(mcSel) mcSel.onchange = renderModelCard;
     renderCalc();
     render();
     renderProb();
     renderOppCost();
+    renderModelCard();
   } catch(err){
     statusEl.innerHTML = 'Failed to load data files: '+err.message+
       '<br>This page must be served over HTTP(S) - opening index.html directly via file:// blocks fetch() of local JSON in most browsers. '+

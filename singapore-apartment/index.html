@@ -76,6 +76,33 @@ svg#trendChart{width:100%;height:auto;}
 .info-tip.below .info-bubble{bottom:auto;top:calc(100% + 8px);}
 .info-tip.below .info-bubble::after{top:auto;bottom:100%;border-top-color:transparent;border-bottom-color:#232b3d;}
 h2 .info-tip{margin-left:8px;}
+.prov-tag{display:inline-block;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;
+  padding:2px 7px;border-radius:10px;background:rgba(255,184,79,0.16);color:var(--warn);border:1px solid var(--warn);
+  vertical-align:middle;margin-left:8px;}
+.model-banner{border-radius:8px;padding:10px 13px;font-size:12.5px;line-height:1.5;}
+.model-banner.prov{background:rgba(255,184,79,0.10);border:1px solid rgba(255,184,79,0.5);color:var(--text);}
+.model-banner.ok{background:rgba(62,207,142,0.10);border:1px solid rgba(62,207,142,0.5);color:var(--text);}
+.stat .v .se{font-size:11px;font-weight:400;color:var(--muted);}
+/* Collapsible cards (native <details>/<summary>): stay compact when closed, no JS. */
+details.collapsible{padding:0;}
+details.collapsible > summary{list-style:none;cursor:pointer;padding:14px 20px;display:flex;
+  align-items:center;justify-content:space-between;gap:12px;user-select:none;}
+details.collapsible > summary::-webkit-details-marker{display:none;}
+details.collapsible > summary > h2{margin:0;flex:1;}
+details.collapsible > summary:hover .chev{color:var(--text);}
+details.collapsible .chev{width:10px;height:10px;border-right:2px solid var(--muted);
+  border-bottom:2px solid var(--muted);transform:rotate(-45deg);transition:transform .15s ease;
+  margin-right:4px;color:var(--muted);}
+details.collapsible[open] .chev{transform:rotate(45deg);}
+details.collapsible > *:not(summary){padding:0 20px 18px 20px;}
+details.collapsible > ul:not(summary),
+details.collapsible > .gloss{margin-top:0;}
+dl.gloss{display:grid;grid-template-columns:max-content 1fr;column-gap:18px;row-gap:8px;
+  margin:6px 0;color:var(--text);font-size:12.5px;line-height:1.55;}
+dl.gloss dt{color:var(--accent);font-weight:600;white-space:nowrap;}
+dl.gloss dd{margin:0;color:var(--muted);}
+dl.gloss dd b{color:var(--text);font-weight:600;}
+@media(max-width:640px){ dl.gloss{grid-template-columns:1fr;row-gap:2px;} dl.gloss dd{margin-bottom:6px;} }
 </style>
 </head>
 <body>
@@ -86,8 +113,8 @@ h2 .info-tip{margin-left:8px;}
 <div id="loadStatus"></div>
 <div class="container" id="app" style="display:none;">
 
-  <div class="card notes">
-    <h2>Data notes &amp; methodology</h2>
+  <details class="card notes collapsible">
+    <summary><h2>Data notes &amp; methodology</h2><span class="chev" aria-hidden="true"></span></summary>
     <ul>
       <li>Matching is by <b>district + project + size band</b> (350&ndash;550 / 550&ndash;750 / 750&ndash;1000 sqft), not just project name &mdash; a project's sale price is only compared against rent for similarly-sized units. See <code>data/meta.json</code> for the full generation log.</li>
       <li>Sales files have no bedroom count &mdash; size band is the 1&ndash;2BR proxy. Rental files have a real bedroom field, filtered to 1 or 2.</li>
@@ -99,7 +126,32 @@ h2 .info-tip{margin-left:8px;}
       <li>The calculator's "Upfront cash required" section includes Buyer's Stamp Duty (progressive 1-6% scale) and Additional Buyer's Stamp Duty (rate depends on buyer citizenship/PR status and existing property count) per current IRAS rates, plus optional buyer's-agent commission and legal/misc costs.</li>
       <li>The "Opportunity cost of capital" chart is a leverage-adjusted comparison: the property line tracks NET EQUITY (value minus remaining mortgage balance, from a full month-by-month amortization) grown at a REAL historical appreciation rate computed from transacted PSF data for the specific project (falls back to the district if the project's own history is too thin), plus the frozen one-time transaction costs and any reinvested monthly cash surplus. The alternative line compounds the same total cash outlay at an assumed investment return, plus any monthly cash shortfalls redirected into it instead.</li>
     </ul>
-  </div>
+  </details>
+
+  <details class="card notes collapsible">
+    <summary><h2>Terminology</h2><span class="chev" aria-hidden="true"></span></summary>
+    <dl class="gloss">
+      <dt>PSF</dt><dd>Price per square foot. For rent, dollars of monthly rent per sqft.</dd>
+      <dt>Size band</dt><dd>A: 350&ndash;550 sqft (~1BR). B: 550&ndash;750 sqft (~1.5BR). C: 750&ndash;1000 sqft (~2BR). Used because sales rows don't carry a bedroom count.</dd>
+      <dt>Gross yield</dt><dd>Annual rent divided by purchase price, before any costs, mortgage, or tax. A quick income measure, not the same as after-tax cash flow.</dd>
+      <dt>Tenure (Freehold vs Leasehold)</dt><dd>Freehold: you own the land indefinitely. Leasehold: you own it for a fixed term (usually 99 years) after which it reverts to the state.</dd>
+      <dt>LTV</dt><dd>Loan-to-Value. The mortgage as a percentage of the purchase price. 75% LTV on a S$1M unit means a S$750k loan and a S$250k cash down payment.</dd>
+      <dt>Breakeven LTV</dt><dd>The highest LTV at which monthly after-tax cash flow stays at or above zero. Higher is better: the property can support a bigger, more typical loan without running a shortfall.</dd>
+      <dt>MCST</dt><dd>Management Corporation Strata Title. The monthly fee every condo owner pays for building upkeep, security, and shared facilities.</dd>
+      <dt>BSD</dt><dd>Buyer's Stamp Duty. A tax paid by every buyer on the purchase price, progressive from 1% to 6% per IRAS.</dd>
+      <dt>ABSD</dt><dd>Additional Buyer's Stamp Duty. A flat rate on top of BSD, based on the buyer's citizenship/PR status and how many residential properties they already own.</dd>
+      <dt>SSD</dt><dd>Seller's Stamp Duty. A tax on residential property sold within a holding window (currently 12/8/4/0% for sales inside 1/2/3/&gt;3 years).</dd>
+      <dt>AV</dt><dd>Annual Value. IRAS's estimate of the property's yearly market rental potential, used as the base for property tax regardless of actual vacancy.</dd>
+      <dt>CAGR</dt><dd>Compound Annual Growth Rate. The steady yearly growth that would take the first observed value to the last over the period, smoothing quarter-to-quarter noise.</dd>
+      <dt>Opportunity cost</dt><dd>The return your cash would have earned in the next-best alternative (e.g. a diversified ETF) had you not tied it up in the property.</dd>
+      <dt>Cointegration</dt><dd>Two time series are cointegrated if they wander individually but stay tied by a stable long-run relationship. For price and rent, this is what makes a "rent-justified price" a meaningful concept.</dd>
+      <dt>VECM</dt><dd>Vector Error-Correction Model. Fits how price and rent adjust back toward that long-run relationship after a deviation. The <b>error-correction term</b> is a live gauge of how stretched today's price looks vs the rent-justified level.</dd>
+      <dt>OU (yield)</dt><dd>Ornstein-Uhlenbeck process. A mean-reverting model applied to the rental yield (rent&divide;price), calibrated with a long-run mean, a reversion speed, and volatility.</dd>
+      <dt>Structural break</dt><dd>A statistically detected shift in the long-run behavior of a series (e.g. policy change, rate cycle). The long-run yield is regime-dependent, so pre-break history should not be pooled with post-break history.</dd>
+      <dt>Real (inflation-adjusted)</dt><dd>Dollar amounts divided by cumulative inflation, so terminal wealth is expressed in today's purchasing power.</dd>
+      <dt>P10 / median / P90</dt><dd>Percentiles of the simulated distribution. P10 is the 10th-percentile outcome (only 10% of paths were worse); the median is the middle path; P90 is the 90th-percentile outcome (only 10% of paths were better).</dd>
+    </dl>
+  </details>
 
   <div class="card">
     <h2>Filters</h2>
@@ -271,7 +323,7 @@ h2 .info-tip{margin-left:8px;}
     </div>
     <svg id="oppChart" viewBox="0 0 1080 380" preserveAspectRatio="xMidYMid meet" style="margin-top:14px;"></svg>
     <div class="legend-row" id="oppLegend"></div>
-    <div class="small" style="margin-top:8px;">Hover any point on the chart for the exact breakdown (property value, loan balance, % owned, active rate, cumulative reinvested/redirected cash flow) at that year. Caveats: (1) rent, MCST, insurance, and expense percentages are held flat at today's levels for the whole horizon - only the mortgage rate/payment varies year to year (if "Rate changes over time" is selected); no rent growth or expense inflation is projected. (2) No exit costs are modeled (agent commission or Seller's Stamp Duty if sold within the holding period). (3) Only the down-payment slice of your outlay becomes equity - BSD/ABSD/agent/legal are sunk transaction costs that never grow, which is why the property line's early growth looks slower per dollar than the alternative line.</div>
+    <div class="small" style="margin-top:8px;">Hover any point on the chart for the exact breakdown (property value, loan balance, % owned, active rate, cumulative reinvested/redirected cash flow) at that year. Caveats: (1) rent, MCST, insurance, and expense percentages are held flat at today's levels for the whole horizon - only the mortgage rate/payment varies year to year (if "Rate changes over time" is selected); no rent growth or expense inflation is projected. (2) Exit costs ARE modeled at every year on the property line: 2% marketing agent commission on the sale price at that year, plus Seller's Stamp Duty (12% within 1yr, 8% &lt;2yr, 4% &lt;3yr, 0% thereafter) if you exit inside the SSD window. The alternative-investment line assumes no exit cost, matching a normal brokerage sale. (3) Only the down-payment slice of your outlay becomes equity - BSD/ABSD/agent/legal are sunk transaction costs that never grow, which is why the property line's early growth looks slower per dollar than the alternative line.</div>
   </div>
 
   <div class="card">
@@ -310,6 +362,23 @@ h2 .info-tip{margin-left:8px;}
     </div>
     <svg id="trendChart" viewBox="0 0 1080 380" preserveAspectRatio="xMidYMid meet"></svg>
     <div class="legend-row" id="chartLegend"></div>
+  </div>
+
+  <div class="card" id="modelCard" style="display:none;">
+    <h2>Stochastic price-rent model <span class="prov-tag">provisional</span><span class="info-tip" tabindex="0">i<span class="info-bubble">An offline statistical model of how price and rent move together, calibrated on the transaction history. The browser only loads and interpolates precomputed results (data/series.json, model_params.json, mc_grid.json) &mdash; it runs no simulation. All fitting happens in the sg_price_rent_model.ipynb notebook.</span></span></h2>
+    <div class="sub">Reads the district, entry yield, LTV, horizon, appreciation and ETF assumptions from the calculator above. Buy-vs-ETF terminal wealth and the break-even appreciation are interpolated from a precomputed Monte-Carlo grid. Pick the district here.</div>
+    <div id="mcBanner" class="model-banner"></div>
+    <div class="row" style="margin-top:12px;">
+      <div class="col" style="max-width:320px;">
+        <label>District for the model<span class="info-tip" tabindex="0">i<span class="info-bubble">The econometric fit and Monte-Carlo grid are per district. The entry-yield bucket is chosen automatically from the price and rent in the calculator above.</span></span></label>
+        <select id="mcDistrict"></select>
+      </div>
+    </div>
+    <h2 style="font-size:14px;margin-top:16px;">Valuation gauge &amp; fitted relationship <span class="small">(for the selected district)</span></h2>
+    <div class="summary-grid" id="mcGauge"></div>
+    <div class="small" id="mcBreakNote" style="margin-top:8px;"></div>
+    <h2 style="font-size:14px;margin-top:16px;">Buy vs ETF over your horizon</h2>
+    <div id="mcResult"></div>
   </div>
 
 </div>

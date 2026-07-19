@@ -1,0 +1,20 @@
+[project]
+name = "sg-price-rent-model"
+version = "0.1.0"
+description = "Offline econometric and Monte-Carlo pipeline for the Singapore Rental Property Investment Calculator. Fits the price-rent model in sg_price_rent_model.ipynb and writes the JSON artifacts consumed by the static website."
+requires-python = ">=3.11"
+dependencies = [
+    "pandas>=2.0",
+    "numpy>=1.24",
+    "scipy>=1.10",
+    "statsmodels>=0.14",
+    "jupyter>=1.0",
+    "nbconvert>=7.0",
+    "nbformat>=5.0",
+    "ipykernel>=6.0",
+]
+
+[tool.uv]
+# Not a distributable package - the notebook and build_data.py are the entry points,
+# nothing here is imported from anywhere else.
+package = false

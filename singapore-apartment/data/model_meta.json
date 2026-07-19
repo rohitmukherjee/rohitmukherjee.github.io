@@ -1,0 +1,95 @@
+{
+  "generated": "2026-07-19T12:33:55",
+  "notebook": "sg_price_rent_model.ipynb",
+  "source": {
+    "kind": "app_json",
+    "sales_file": "sales.json",
+    "rent_file": "rent.json",
+    "date_range": [
+      "2021-Q2",
+      "2026-Q3"
+    ],
+    "n_quarters": 22,
+    "districts": [
+      "D01",
+      "D02",
+      "D03",
+      "D04",
+      "D09",
+      "D10",
+      "D15"
+    ]
+  },
+  "model_specs": {
+    "fit_level": "district",
+    "cointegration": [
+      "engle_granger (fixed lag)",
+      "johansen (k_ar_diff=1)"
+    ],
+    "vecm": "rank 1, k_ar_diff=1, deterministic='ci'; error-correction + rent->price Granger",
+    "ou_calibration": "AR(1)-on-yield OLS, exact discretization (dt=0.25yr)",
+    "structural_breaks": "Quandt-Andrews supF single-break, 15% trim"
+  },
+  "monte_carlo": {
+    "n_paths": 5000,
+    "seed": 42,
+    "dt_years": 0.25,
+    "grid_axes": {
+      "horizon_years": [
+        5,
+        10,
+        15,
+        20,
+        25,
+        30
+      ],
+      "ltv_pct": [
+        0,
+        25,
+        50,
+        55,
+        60,
+        65,
+        70,
+        75,
+        80
+      ],
+      "entry_yield_bucket": [
+        "low",
+        "mid",
+        "high"
+      ],
+      "appreciation_drift_pct": [
+        -2,
+        0,
+        2,
+        4,
+        6
+      ],
+      "etf_return_pct": [
+        3,
+        5,
+        7,
+        9,
+        11
+      ]
+    },
+    "finance": {
+      "mortgage_rate_pct": 3.0,
+      "loan_tenure_yrs": 30,
+      "mcst_month": 500,
+      "insurance_yr": 300,
+      "agent_pct": 4.2,
+      "repair_pct": 2.0,
+      "vacancy_months": 1,
+      "base_income": 0,
+      "sell_agent_pct": 2.0,
+      "inflation_pct": 2.0,
+      "expense_growth_pct": 2.0
+    }
+  },
+  "data_adequacy_global": {
+    "flag": "low_confidence",
+    "reason": "20-20 quarterly obs per segment; all below 40 - cointegration/VECM/OU are provisional, not robust"
+  }
+}
