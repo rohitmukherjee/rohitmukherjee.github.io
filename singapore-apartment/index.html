@@ -340,8 +340,11 @@ dl.gloss dd b{color:var(--text);font-weight:600;}
     <div class="tablewrap" style="margin-top:10px;"><table id="probTable"><thead></thead><tbody></tbody></table></div>
   </div>
 
-  <div class="card">
-    <h2>Price trend<span class="info-tip" tabindex="0">i<span class="info-bubble">PSF = price per square foot. Plots how the median sale and/or rental $/sqft moved quarter to quarter, so you can see whether a district or project is actually trending up, flat, or down — this is also where the appreciation CAGR used in the "Opportunity cost of capital" section comes from.</span></span></h2>
+  <details class="card collapsible">
+    <summary>
+      <h2>Price trend<span class="info-tip" tabindex="0">i<span class="info-bubble">PSF = price per square foot. Plots how the median sale and/or rental $/sqft moved quarter to quarter, so you can see whether a district or project is actually trending up, flat, or down — this is also where the appreciation CAGR used in the "Opportunity cost of capital" section comes from.</span></span></h2>
+      <span class="chev" aria-hidden="true"></span>
+    </summary>
     <div class="sub">Median $ per sqft per quarter (sale PSF and/or rental $/sqft), from every transaction in the current size/tenure/date filters above. This chart has its own district filter below, independent of the table filters. Solid lines = sale $/sqft, dashed lines = rental $/sqft.</div>
     <div class="chip-row" id="chartModeChips">
       <span class="chip active" data-mode="district">By district</span>
@@ -362,9 +365,9 @@ dl.gloss dd b{color:var(--text);font-weight:600;}
     </div>
     <svg id="trendChart" viewBox="0 0 1080 380" preserveAspectRatio="xMidYMid meet"></svg>
     <div class="legend-row" id="chartLegend"></div>
-  </div>
+  </details>
 
-  <details class="card collapsible" id="modelCard" style="display:none;" open>
+  <details class="card collapsible" id="modelCard" style="display:none;">
     <summary>
       <h2>Stochastic price-rent model <span class="prov-tag">provisional</span><span class="info-tip" tabindex="0">i<span class="info-bubble">An offline statistical model of how price and rent move together, calibrated on the transaction history. The browser only loads and interpolates precomputed results (data/series.json, model_params.json, mc_grid.json) &mdash; it runs no simulation. All fitting happens in the sg_price_rent_model.ipynb notebook.</span></span></h2>
       <span class="chev" aria-hidden="true"></span>
