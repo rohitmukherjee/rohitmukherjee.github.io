@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  {% include head.html %}
+</head>
+<body>
+
+{% include header.html %}
+
+<main class="wrap">
+  {{ content }}
+</main>
+
+{% include footer.html %}
+
+<script>
+(function () {
+  const themes = ['light', 'dark', 'ft'];
+  const KEY = 'theme';
+  const root = document.documentElement;
+  function apply(t) {
+    root.setAttribute('data-theme', t);
+    document.querySelectorAll('.theme-picker button').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.theme === t);
+      btn.setAttribute('aria-pressed', btn.dataset.theme === t);
+    });
+  }
+  document.querySelectorAll('.theme-picker button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const t = btn.dataset.theme;
+      if (!themes.includes(t)) return;
+      localStorage.setItem(KEY, t);
+      apply(t);
+    });
+  });
+  // Ensure the current stored theme is reflected in the button state.
+  // The <html data-theme=""> attribute itself is already set by the inline
+  // script in <head> to avoid flash-of-wrong-theme on first paint.
+  apply(localStorage.getItem(KEY) || 'dark');
+})();
+</script>
+
+</body>
+</html>

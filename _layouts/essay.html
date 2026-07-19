@@ -1,0 +1,23 @@
+---
+layout: default
+---
+
+<article class="essay">
+  <header class="essay-header">
+    <h1>{{ page.title }}</h1>
+    {% if page.date %}
+      <p class="essay-meta">
+        <time datetime="{{ page.date | date_to_xmlschema }}">{{ page.date | date: "%B %-d, %Y" }}</time>
+        {% if page.reading_time %} &middot; {{ page.reading_time }} min read{% endif %}
+      </p>
+    {% endif %}
+  </header>
+
+  <div class="essay-body">
+    {{ content }}
+  </div>
+
+  <footer class="essay-footer">
+    <a href="{{ '/#essays' | relative_url }}">&larr; All essays</a>
+  </footer>
+</article>

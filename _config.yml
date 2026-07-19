@@ -1,0 +1,41 @@
+title: Rohit Mukherjee
+description: Essays, calculators, and a few side projects.
+url: https://rohitmukherjee.com
+
+markdown: kramdown
+kramdown:
+  syntax_highlighter: rouge
+
+plugins:
+  - jekyll-feed
+  - jekyll-seo-tag
+  - jekyll-sitemap
+
+collections:
+  essays:
+    output: true
+    permalink: /essays/:name/
+
+defaults:
+  - scope: {path: "", type: essays}
+    values:
+      layout: essay
+
+# Files and directories to exclude from the built site.
+# The two tool subdirectories (singapore-apartment/, cs416/) are NOT excluded:
+# their .html files have no Jekyll front matter, so Jekyll copies them verbatim.
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - README.md
+  - vendor
+  - .venv
+  - node_modules
+  - "*.pyc"
+  - "__pycache__"
+  - singapore-apartment/build_data.py
+  - singapore-apartment/sg_price_rent_model.ipynb
+  - singapore-apartment/pyproject.toml
+  - singapore-apartment/uv.lock
+  - singapore-apartment/README.md
+  - singapore-apartment/.venv
