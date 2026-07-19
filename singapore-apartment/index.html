@@ -364,8 +364,11 @@ dl.gloss dd b{color:var(--text);font-weight:600;}
     <div class="legend-row" id="chartLegend"></div>
   </div>
 
-  <div class="card" id="modelCard" style="display:none;">
-    <h2>Stochastic price-rent model <span class="prov-tag">provisional</span><span class="info-tip" tabindex="0">i<span class="info-bubble">An offline statistical model of how price and rent move together, calibrated on the transaction history. The browser only loads and interpolates precomputed results (data/series.json, model_params.json, mc_grid.json) &mdash; it runs no simulation. All fitting happens in the sg_price_rent_model.ipynb notebook.</span></span></h2>
+  <details class="card collapsible" id="modelCard" style="display:none;" open>
+    <summary>
+      <h2>Stochastic price-rent model <span class="prov-tag">provisional</span><span class="info-tip" tabindex="0">i<span class="info-bubble">An offline statistical model of how price and rent move together, calibrated on the transaction history. The browser only loads and interpolates precomputed results (data/series.json, model_params.json, mc_grid.json) &mdash; it runs no simulation. All fitting happens in the sg_price_rent_model.ipynb notebook.</span></span></h2>
+      <span class="chev" aria-hidden="true"></span>
+    </summary>
     <div class="sub">Reads the district, entry yield, LTV, horizon, appreciation and ETF assumptions from the calculator above. Buy-vs-ETF terminal wealth and the break-even appreciation are interpolated from a precomputed Monte-Carlo grid. Pick the district here.</div>
     <div id="mcBanner" class="model-banner"></div>
     <div class="row" style="margin-top:12px;">
@@ -379,7 +382,7 @@ dl.gloss dd b{color:var(--text);font-weight:600;}
     <div class="small" id="mcBreakNote" style="margin-top:8px;"></div>
     <h2 style="font-size:14px;margin-top:16px;">Buy vs ETF over your horizon</h2>
     <div id="mcResult"></div>
-  </div>
+  </details>
 
 </div>
 <script src="app.js"></script>

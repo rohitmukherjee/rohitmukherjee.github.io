@@ -1005,8 +1005,12 @@ function wireControls(){
     document.getElementById('sizeLabel').textContent=state.sizeMin+'–'+state.sizeMax; render(); renderProb();
   };
   document.getElementById('dateWindow').onchange=e=>{ state.dateWindow=+e.target.value; render(); };
+  // Calculator inputs: recompute ONLY on `change` (fires when focus leaves the field, on
+  // Enter, or on arrow-key increment for number inputs; fires immediately for <select>).
+  // Not on `input` - re-rendering on every keystroke made the page jump around while typing
+  // multi-digit numbers like "1650000" (7 recomputes, one per digit). The sliders elsewhere
+  // (sizeMin/sizeMax/halfLife/probLtv) still use `oninput` for live dragging feedback.
   document.querySelectorAll('input[id^=c], select[id^=c]').forEach(inp=>{
-    inp.oninput=()=>{ renderCalc(); render(); renderOppCost(); renderModelCard(); };
     inp.onchange=()=>{ renderCalc(); render(); renderOppCost(); renderModelCard(); };
   });
   document.getElementById('probLtv').oninput = renderProb;
