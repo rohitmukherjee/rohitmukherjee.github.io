@@ -2,9 +2,11 @@
   <div class="wrap header-row">
     <a class="site-title" href="{{ '/' | relative_url }}">{{ site.title }}</a>
     <nav class="site-nav">
+      <a href="{{ '/tools/' | relative_url }}">Tools</a>
+      {% comment %} Uncomment when ready:
       <a href="{{ '/#essays' | relative_url }}">Essays</a>
-      <a href="{{ '/assets/cv.pdf' | relative_url }}">CV</a>
-      <a href="{{ '/#tools' | relative_url }}">Tools</a>
+      <a href="{{ '/cv/' | relative_url }}">CV</a>
+      {% endcomment %}
     </nav>
     <div class="theme-picker" role="group" aria-label="Color theme">
       <button type="button" data-theme="light" title="Light" aria-label="Light theme">L</button>

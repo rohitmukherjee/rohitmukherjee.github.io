@@ -4,12 +4,46 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Singapore Rental Property Investment Calculator</title>
+<script>
+  // Set the theme before first paint so the page doesn't flash the wrong palette.
+  // Theme is shared with the parent Jekyll site via localStorage (same origin).
+  (function () {
+    try {
+      var t = localStorage.getItem('theme') || 'dark';
+      document.documentElement.setAttribute('data-theme', t);
+    } catch (e) {
+      document.documentElement.setAttribute('data-theme', 'dark');
+    }
+  })();
+</script>
 <style>
-:root{
+/* All three themes share the calculator's existing variable names. Switching
+   [data-theme] on <html> swaps the palette; the rest of the CSS below just
+   consumes var(--bg), var(--panel), etc. and doesn't need to change. */
+:root, [data-theme="dark"] {
   --bg:#0f1420; --panel:#171d2b; --panel2:#1e2534; --border:#2a3244;
   --text:#e8ebf2; --muted:#8b93a7; --accent:#4f8cff; --good:#3ecf8e; --bad:#ff6b6b; --warn:#ffb84f;
-  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;
 }
+[data-theme="light"] {
+  --bg:#ffffff; --panel:#ffffff; --panel2:#f5f5f7; --border:#e5e5ea;
+  --text:#1a1a1a; --muted:#6b7280; --accent:#0066cc; --good:#16a34a; --bad:#dc2626; --warn:#d97706;
+}
+[data-theme="ft"] {
+  /* Financial Times signature palette: salmon paper, off-black text, claret accent. */
+  --bg:#fff1e5; --panel:#fff1e5; --panel2:#f2e5cf; --border:#d9d2c4;
+  --text:#33302e; --muted:#66605c; --accent:#990f3d; --good:#0d7680; --bad:#990f3d; --warn:#996a13;
+}
+:root { font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif; }
+/* Theme picker (matches the Jekyll site's picker style so switching feels the same). */
+.theme-picker{display:inline-flex;gap:4px;padding:3px;border:1px solid var(--border);
+  border-radius:20px;background:var(--panel2);}
+.theme-picker button{cursor:pointer;border:none;background:transparent;color:var(--muted);
+  font-family:inherit;font-size:11px;font-weight:600;letter-spacing:.3px;
+  padding:4px 9px;border-radius:14px;transition:background-color .12s ease,color .12s ease;}
+.theme-picker button:hover{color:var(--text);}
+.theme-picker button.active{background:var(--accent);color:#fff;}
+[data-theme="ft"] .theme-picker button.active{color:#fff1e5;}
+.header-inner{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;}
 *{box-sizing:border-box;}
 body{background:var(--bg);color:var(--text);margin:0;padding:0;font-size:14px;}
 header{padding:20px 28px;border-bottom:1px solid var(--border);background:var(--panel);}
@@ -107,9 +141,44 @@ dl.gloss dd b{color:var(--text);font-weight:600;}
 </head>
 <body>
 <header>
-  <h1>Singapore Rental Property Investment Calculator</h1>
-  <p>Loads <code>data/sales.json</code>, <code>data/rent.json</code> and <code>data/prob_data.json</code> at runtime &mdash; nothing is embedded in this page. <span id="nSales">&hellip;</span> sale rows and <span id="nRent">&hellip;</span> rental rows, filtered to 1&ndash;2BR-sized units (350&ndash;1000 sqft) across all 7 districts in the dataset. No web-research estimates anywhere &mdash; every figure is aggregated live from the loaded transaction rows.</p>
+  <div class="header-inner">
+    <div>
+      <h1>Singapore Rental Property Investment Calculator</h1>
+      <p style="margin-top:4px;"><a href="/" style="color:var(--muted);font-size:13px;text-decoration:none;">&larr; Back to rohitmukherjee.github.io</a></p>
+    </div>
+    <div class="theme-picker" role="group" aria-label="Color theme">
+      <button type="button" data-theme="light" title="Light" aria-label="Light theme">L</button>
+      <button type="button" data-theme="dark"  title="Dark"  aria-label="Dark theme">D</button>
+      <button type="button" data-theme="ft"    title="Financial Times" aria-label="Financial Times theme">FT</button>
+    </div>
+  </div>
+  <p style="margin-top:12px;">Loads <code>data/sales.json</code>, <code>data/rent.json</code> and <code>data/prob_data.json</code> at runtime &mdash; nothing is embedded in this page. <span id="nSales">&hellip;</span> sale rows and <span id="nRent">&hellip;</span> rental rows, filtered to 1&ndash;2BR-sized units (350&ndash;1000 sqft) across all 7 districts in the dataset. No web-research estimates anywhere &mdash; every figure is aggregated live from the loaded transaction rows.</p>
 </header>
+<script>
+(function () {
+  // Theme picker wiring. Same 'theme' localStorage key as the parent Jekyll site,
+  // so a choice made here also affects the homepage/tools/CV/essays pages.
+  const themes = ['light', 'dark', 'ft'];
+  const KEY = 'theme';
+  const root = document.documentElement;
+  function apply(t) {
+    root.setAttribute('data-theme', t);
+    document.querySelectorAll('.theme-picker button').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.theme === t);
+      btn.setAttribute('aria-pressed', btn.dataset.theme === t);
+    });
+  }
+  document.querySelectorAll('.theme-picker button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const t = btn.dataset.theme;
+      if (!themes.includes(t)) return;
+      localStorage.setItem(KEY, t);
+      apply(t);
+    });
+  });
+  apply(localStorage.getItem(KEY) || 'dark');
+})();
+</script>
 <div id="loadStatus"></div>
 <div class="container" id="app" style="display:none;">
 

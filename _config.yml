@@ -1,6 +1,6 @@
 title: Rohit Mukherjee
 description: Essays, calculators, and a few side projects.
-url: https://rohitmukherjee.com
+url: https://rohitmukherjee.github.io
 
 markdown: kramdown
 kramdown:
@@ -29,13 +29,16 @@ exclude:
   - Gemfile.lock
   - README.md
   - vendor
-  - .venv
+  - .venv/
+  - "**/.venv/"
   - node_modules
   - "*.pyc"
   - "__pycache__"
+  - "**/__pycache__/"
   - singapore-apartment/build_data.py
   - singapore-apartment/sg_price_rent_model.ipynb
   - singapore-apartment/pyproject.toml
   - singapore-apartment/uv.lock
   - singapore-apartment/README.md
-  - singapore-apartment/.venv
+  - singapore-apartment/.venv/
+  - singapore-apartment/model_core.py

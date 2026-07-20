@@ -1,0 +1,7 @@
+---
+# Overrides the default Jekyll theme's style.scss (multiple bundled themes
+# ship one that trips the Sass converter on UTF-8 chars). We don't use Sass
+# at all - all styling lives in assets/css/main.css - so this file is
+# intentionally empty. The front matter is required so Jekyll processes
+# (not copies) it, taking precedence over the theme's version.
+---

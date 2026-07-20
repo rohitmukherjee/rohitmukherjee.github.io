@@ -18,3 +18,8 @@ _site/
 .jekyll-cache/
 .jekyll-metadata
 Gemfile.lock
+
+# Ruby: bundler-managed local install and per-machine config.
+# GitHub Pages installs its own gems; the local vendor/ is scratch only.
+vendor/
+.bundle/
