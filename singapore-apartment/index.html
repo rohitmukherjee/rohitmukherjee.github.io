@@ -152,7 +152,7 @@ dl.gloss dd b{color:var(--text);font-weight:600;}
       <button type="button" data-theme="ft"    title="Financial Times" aria-label="Financial Times theme">FT</button>
     </div>
   </div>
-  <p style="margin-top:12px;">Loads <code>data/sales.json</code>, <code>data/rent.json</code> and <code>data/prob_data.json</code> at runtime &mdash; nothing is embedded in this page. <span id="nSales">&hellip;</span> sale rows and <span id="nRent">&hellip;</span> rental rows, filtered to 1&ndash;2BR-sized units (350&ndash;1000 sqft) across all 7 districts in the dataset. No web-research estimates anywhere &mdash; every figure is aggregated live from the loaded transaction rows.</p>
+  <p style="margin-top:12px;">Loads <code>data/sales.json</code>, <code>data/rent.json</code> and <code>data/prob_data.json</code> at runtime &mdash; nothing is embedded in this page. <span id="nSales">&hellip;</span> sale rows and <span id="nRent">&hellip;</span> rental rows spanning <span id="dataRangeText">&hellip;</span> across <span id="nDistrictsText">&hellip;</span> districts in the current dataset. The size range is fully configurable via the slider below; to include units outside the loaded range, regenerate <code>sales.json</code>/<code>rent.json</code> with wider <code>--size-lo</code>/<code>--size-hi</code> in <code>build_data.py</code>. Every figure is aggregated live from the loaded transaction rows.</p>
 </header>
 <script>
 (function () {

@@ -928,6 +928,34 @@ function populateChartProjectPicker(matched){
   sel.innerHTML = uniq.map(m=>`<option value="${m.district}|||${m.project}" ${state.chartProjects.has(m.district+'|||'+m.project)?'selected':''}>${m.district} — ${m.project} (n=${m.n})</option>`).join('');
 }
 
+// Slider bounds are DATA-DRIVEN, not hardcoded. This lets you widen the sqft
+// filter in build_data.py (--size-lo/--size-hi) or drop it entirely, and the
+// UI adjusts automatically on next load. Default sliders show the full data
+// range; the user narrows down if they want.
+function initSizeSliders(){
+  let rawMin = Infinity, rawMax = -Infinity;
+  for(const r of SALES){ const s=r[3]; if(s<rawMin) rawMin=s; if(s>rawMax) rawMax=s; }
+  for(const r of RENT ){ const s=r[3]; if(s<rawMin) rawMin=s; if(s>rawMax) rawMax=s; }
+  if(!isFinite(rawMin) || !isFinite(rawMax)) return;
+  // Round to a clean 50-sqft step so slider stops feel natural.
+  const dataMin = Math.max(50, Math.floor(rawMin/50)*50);
+  const dataMax = Math.ceil(rawMax/50)*50;
+  const minEl = document.getElementById('sizeMin');
+  const maxEl = document.getElementById('sizeMax');
+  minEl.min = dataMin; minEl.max = dataMax; minEl.value = dataMin;
+  maxEl.min = dataMin; maxEl.max = dataMax; maxEl.value = dataMax;
+  state.sizeMin = dataMin;
+  state.sizeMax = dataMax;
+  document.getElementById('sizeLabel').textContent = dataMin+'–'+dataMax;
+  const rangeEl = document.getElementById('dataRangeText');
+  if(rangeEl) rangeEl.textContent = dataMin+'–'+dataMax+' sqft';
+  const distEl = document.getElementById('nDistrictsText');
+  if(distEl){
+    const codes = new Set([...SALES.map(r=>r[0]), ...RENT.map(r=>r[0])]);
+    distEl.textContent = codes.size;
+  }
+}
+
 // ---------------- controls wiring ----------------
 function buildDistrictChips(){
   // District list comes from whatever is actually present in the loaded data, sorted by code -
@@ -1254,6 +1282,7 @@ async function boot(){
     document.getElementById('nRent').textContent = RENT.length.toLocaleString();
     statusEl.textContent = '';
     document.getElementById('app').style.display = 'block';
+    initSizeSliders();
     buildDistrictChips();
     buildChartDistrictChips();
     wireControls();
