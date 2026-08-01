@@ -117,6 +117,17 @@ h2 .info-tip{margin-left:8px;}
 .model-banner.prov{background:rgba(255,184,79,0.10);border:1px solid rgba(255,184,79,0.5);color:var(--text);}
 .model-banner.ok{background:rgba(62,207,142,0.10);border:1px solid rgba(62,207,142,0.5);color:var(--text);}
 .stat .v .se{font-size:11px;font-weight:400;color:var(--muted);}
+.verdict{margin-top:14px;padding:12px 14px;border-radius:8px;border:1px solid var(--border);
+  background:var(--panel2);}
+.verdict.good{border-color:var(--good);}
+.verdict.warn{border-color:var(--warn);}
+.verdict.bad{border-color:var(--bad);}
+.verdict-head{font-weight:700;font-size:14.5px;margin-bottom:6px;}
+.verdict.good .verdict-head{color:var(--good);}
+.verdict.warn .verdict-head{color:var(--warn);}
+.verdict.bad  .verdict-head{color:var(--bad);}
+.verdict-body{color:var(--text);font-size:13px;line-height:1.55;}
+.verdict-body b{color:var(--text);}
 /* Collapsible cards (native <details>/<summary>): stay compact when closed, no JS. */
 details.collapsible{padding:0;}
 details.collapsible > summary{list-style:none;cursor:pointer;padding:14px 20px;display:flex;
@@ -231,7 +242,7 @@ dl.gloss dd b{color:var(--text);font-weight:600;}
         <div class="chip-row" id="districtChips"></div>
       </div>
       <div class="col">
-        <label>Tenure (sales only)</label>
+        <label>Tenure</label>
         <div class="chip-row" id="tenureChips">
           <span class="chip active" data-tenure="all">All</span>
           <span class="chip" data-tenure="freehold">Freehold only</span>
@@ -392,6 +403,7 @@ dl.gloss dd b{color:var(--text);font-weight:600;}
     </div>
     <svg id="oppChart" viewBox="0 0 1080 380" preserveAspectRatio="xMidYMid meet" style="margin-top:14px;"></svg>
     <div class="legend-row" id="oppLegend"></div>
+    <div id="oppVerdict" class="verdict"></div>
     <div class="small" style="margin-top:8px;">Hover any point on the chart for the exact breakdown (property value, loan balance, % owned, active rate, cumulative reinvested/redirected cash flow) at that year. Caveats: (1) rent, MCST, insurance, and expense percentages are held flat at today's levels for the whole horizon - only the mortgage rate/payment varies year to year (if "Rate changes over time" is selected); no rent growth or expense inflation is projected. (2) Exit costs ARE modeled at every year on the property line: 2% marketing agent commission on the sale price at that year, plus Seller's Stamp Duty (12% within 1yr, 8% &lt;2yr, 4% &lt;3yr, 0% thereafter) if you exit inside the SSD window. The alternative-investment line assumes no exit cost, matching a normal brokerage sale. (3) Only the down-payment slice of your outlay becomes equity - BSD/ABSD/agent/legal are sunk transaction costs that never grow, which is why the property line's early growth looks slower per dollar than the alternative line.</div>
   </div>
 

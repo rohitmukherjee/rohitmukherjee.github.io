@@ -272,6 +272,29 @@ function inDateWindow(dateStr){
   const d = new Date(y, m-1, 1);
   return d >= cutoff;
 }
+// Rental transactions don't carry tenure info in the source, so the tenure filter
+// can't be applied directly to rent rows. Instead we build a project -> tenure map
+// from the sales data ("Freehold" if ANY sale of that project is Freehold, else
+// "Leasehold") and apply THAT to rentals when the user picks freehold/leasehold.
+// Cached and rebuilt lazily on data change.
+let _projectTenureCache = null;
+function projectTenureMap(){
+  if(_projectTenureCache) return _projectTenureCache;
+  const m = new Map();
+  for(const [d,proj,ten] of SALES){
+    const key = d+'|||'+proj;
+    if(ten==='Freehold') m.set(key, 'Freehold');
+    else if(!m.has(key)) m.set(key, 'Leasehold');
+  }
+  _projectTenureCache = m;
+  return m;
+}
+function rentPassesTenureFilter(district, project){
+  if(state.tenure==='all') return true;
+  const t = projectTenureMap().get(district+'|||'+project);
+  if(!t) return false;   // no sales history for this project = can't classify, exclude
+  return (state.tenure==='freehold') ? (t==='Freehold') : (t==='Leasehold');
+}
 function filteredSales(){
   return SALES.filter(r=>{
     const [d,proj,ten,sqft,psf,price,ds]=r;
@@ -291,6 +314,7 @@ function filteredRent(){
     if(state.bed==='1' && bed!==1) return false;
     if(state.bed==='2' && bed!==2) return false;
     if(!inDateWindow(ds)) return false;
+    if(!rentPassesTenureFilter(d, proj)) return false;
     return true;
   });
 }
@@ -314,6 +338,7 @@ function filteredRentNoDistrict(){
     if(state.bed==='1' && bed!==1) return false;
     if(state.bed==='2' && bed!==2) return false;
     if(!inDateWindow(ds)) return false;
+    if(!rentPassesTenureFilter(d, proj)) return false;
     return true;
   });
 }
@@ -442,6 +467,7 @@ function render(){
       if(g){ document.getElementById('cGrowth').value = (g.cagr*100).toFixed(2); LAST_GROWTH_INFO = g; }
       renderCalc();
       renderOppCost();
+      renderModelCard();   // otherwise the model card stays on the previous project's inputs
       window.scrollTo({top:document.getElementById('calcOut').getBoundingClientRect().top+window.scrollY-20, behavior:'smooth'});
     };
   });
@@ -561,7 +587,9 @@ function computeGrowthRate(district, project){
   const years=((ly*4+lq)-(fy*4+fq))/4;
   if(years<=0 || !firstPsf || !lastPsf) return null;
   const cagr=Math.pow(lastPsf/firstPsf, 1/years)-1;
-  return {cagr, years, firstQ, lastQ, firstPsf, lastPsf, n:rows.length, source};
+  // district/project are stashed on the return so the model card's district
+  // selector can auto-follow the last "Use"-clicked project.
+  return {cagr, years, firstQ, lastQ, firstPsf, lastPsf, n:rows.length, source, district, project};
 }
 function describeGrowth(g){
   if(!g) return 'Not enough historical spread to compute a trend (need sales in at least 2 distinct quarters).';
@@ -744,6 +772,79 @@ function renderOppCost(){
     {value: equityPath[equityPath.length-1], label:'Property, final', color:'#4f8cff'},
     {value: altPath[altPath.length-1], label:'Alternative, final', color:'#3ecf8e'},
   ]);
+
+  // Verdict block: plain-English "is it worth it?" summary at the user's assumptions.
+  // Deterministic (no stochastics here) - just compares the two terminal values, notes
+  // the break-even appreciation, and flags the year-1 cash-flow implication.
+  const propFinal = equityPath[equityPath.length-1];
+  const altFinal  = altPath[altPath.length-1];
+  const delta = propFinal - altFinal;
+  const pct = altFinal>0 ? delta/altFinal*100 : 0;
+  // Bisect for break-even appreciation: growth rate at which property final == alt final.
+  // Rent, mortgage schedule, cash flows are all independent of appreciation, so only the
+  // (propVal - bal - exit costs) piece varies with growth.
+  const surplusFVh = cumulativeSurplusFV(horizon);
+  function propFinalAtGrowth(g){
+    const propVal = price*Math.pow(1+g/100, horizon);
+    const months = Math.min(horizon*12, schedule.length-1);
+    const bal = schedule[months].balance;
+    const sellComm = SELL_AGENT_PCT_UI*propVal;
+    const ssdAmt   = ssdRate(horizon)*propVal;
+    return (propVal - bal - sellComm - ssdAmt) + sunkCost + surplusFVh;
+  }
+  // Bisect between -10% and +30% growth. Three tri-state outcomes so we don't lie:
+  //   ALWAYS_WINS: property beats alt even at -10% growth (very robust to price drops).
+  //   NEVER_WINS:  property loses to alt even at +30% growth (no crossover in range).
+  //   value:       a specific break-even appreciation.
+  let breakEven = null, breakEvenStatus = 'normal';
+  const lo0 = -10, hi0 = 30;
+  if(propFinalAtGrowth(lo0) >= altFinal){
+    breakEvenStatus = 'always_wins';
+  } else if(propFinalAtGrowth(hi0) < altFinal){
+    breakEvenStatus = 'never_wins';
+  } else {
+    let lo = lo0, hi = hi0;
+    for(let i=0;i<24;i++){
+      const mid = (lo+hi)/2;
+      if(propFinalAtGrowth(mid) >= altFinal) hi = mid; else lo = mid;
+    }
+    breakEven = (lo+hi)/2;
+  }
+  const cf1 = cfByYear[0].monthlyCF;
+  let headline, tone;
+  if(pct >  20) { headline = 'Property strongly beats the alternative'; tone = 'good'; }
+  else if(pct >  5) { headline = 'Property comes out ahead'; tone = 'good'; }
+  else if(pct >= -5) { headline = 'Roughly a wash'; tone = 'warn'; }
+  else if(pct >= -20){ headline = 'Alternative edges out property'; tone = 'bad'; }
+  else               { headline = 'Alternative clearly wins'; tone = 'bad'; }
+  let breakEvenSentence;
+  if(breakEvenStatus === 'always_wins'){
+    breakEvenSentence = 'Property beats the alternative across the full tested appreciation range (down to -10%/yr), so the outcome is robust to price weakness at these cash-flow/LTV settings.';
+  } else if(breakEvenStatus === 'never_wins'){
+    breakEvenSentence = 'Property cannot catch up to the alternative even at +30%/yr appreciation at these settings — the cash-flow drag or opportunity cost is too large.';
+  } else {
+    const margin = growthPct - breakEven;
+    let marginTail = '';
+    if(margin >  2)      marginTail = ' — you have a comfortable margin on that assumption.';
+    else if(margin >= 0) marginTail = ' — your assumed appreciation is only just above break-even, so the verdict is sensitive to being too optimistic.';
+    else                 marginTail = ' — your assumed appreciation sits below break-even, which is why the alternative wins.';
+    breakEvenSentence = `The two paths tie when property appreciates at <b>${breakEven.toFixed(2)}%/yr</b>` + marginTail;
+  }
+  const cfSentence = cf1 < 0
+    ? `Year-1 monthly cash flow is <b>${fmtCur(cf1)}</b> — you'll need to fund a shortfall of roughly <b>${fmtCur(-cf1*12)}/yr</b> to hold the position. That's real money out of pocket on top of the initial outlay.`
+    : `Year-1 monthly cash flow is <b>${fmtCur(cf1)}</b> (positive), so the property covers itself with no ongoing outside funding.`;
+  const verdictEl = document.getElementById('oppVerdict');
+  verdictEl.className = 'verdict ' + tone;
+  verdictEl.innerHTML = `
+    <div class="verdict-head">${headline}</div>
+    <div class="verdict-body">
+      At year ${horizon} the property finishes at <b>${fmtCur(propFinal)}</b> vs <b>${fmtCur(altFinal)}</b> for the alternative &mdash;
+      a ${delta>=0 ? 'gain' : 'shortfall'} of <b>${fmtCur(Math.abs(delta))}</b> (${Math.abs(pct).toFixed(1)}%).
+      Assumes property appreciates ${growthPct.toFixed(2)}%/yr and the alternative earns ${oppCagr.toFixed(2)}%/yr.
+      ${breakEvenSentence}
+      ${cfSentence}
+      This is a deterministic comparison at the assumptions above; the stochastic model card below shows the same question under uncertainty.
+    </div>`;
 }
 
 // ---------------- probability panel ----------------
@@ -1181,6 +1282,7 @@ function interpBreakeven(district, bucket, h, ltv, etf){
   return wsum>0 ? {value:acc/wsum, partial:sawNull} : {value:null, partial:sawNull};
 }
 
+let _lastGrowthSeenInModelCard = null;
 function renderModelCard(){
   if(!MODEL_OK) return;
   const card=document.getElementById('modelCard');
@@ -1190,6 +1292,12 @@ function renderModelCard(){
   if(sel && !sel.dataset.filled){
     sel.innerHTML=MC_GRID.axes.district.map(d=>`<option value="${d}">${d}${DISTRICT_NAMES[d]?(' — '+DISTRICT_NAMES[d]):''}</option>`).join('');
     sel.dataset.filled='1';
+  }
+  // Auto-follow the district of the most recent "Use" click - but only ONCE per Use
+  // (identity check on the LAST_GROWTH_INFO reference), so a user's manual district
+  // pick in the model card doesn't get overwritten on subsequent renders.
+  if(sel && LAST_GROWTH_INFO !== _lastGrowthSeenInModelCard){
+    _lastGrowthSeenInModelCard = LAST_GROWTH_INFO;
     if(LAST_GROWTH_INFO && LAST_GROWTH_INFO.district && MC_GRID.axes.district.includes(LAST_GROWTH_INFO.district))
       sel.value=LAST_GROWTH_INFO.district;
   }
